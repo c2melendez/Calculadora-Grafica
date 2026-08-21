@@ -1,0 +1,163 @@
+"""
+app/routers/matrices.py — `POST /matrix/operations` (spec, secciones 4, 5,
+8.6, 9).
+"""
+
+import time
+
+import sympy
+from fastapi import APIRouter, Request
+
+from app.core.logging import log_request_event
+from app.schemas.requests import MatrixEigenRequest, MatrixOperationRequest, MatrixSingleRequest
+from app.schemas.responses import ErrorCode, MathResponse, MatrixOpKind, OperationType, ResultType
+from app.services import matrix_service, parsing
+from app.services.ast_validator import ComplexityLimitError
+
+router = APIRouter(tags=["matrices"])
+
+
+def _duration_ms(request: Request) -> float:
+    return (time.perf_counter() - request.state.start_time) * 1000
+
+
+def _error(
+    request: Request, operation: OperationType, error_code: ErrorCode, message: str
+) -> MathResponse:
+    return MathResponse(
+        success=False,
+        operation=operation,
+        request_id=request.state.request_id,
+        has_detailed_steps=False,
+        error_code=error_code,
+        error_message=message,
+        duration_ms=_duration_ms(request),
+    )
+
+
+@router.post("/matrix/operations", response_model=MathResponse)
+async def matrix_operations(payload: MatrixOperationRequest, request: Request) -> MathResponse:
+    log_request_event(request.state.request_id, "matrix_operations_request")
+
+    try:
+        matrix_a = matrix_service.parse_matrix(payload.matrix_a)
+        matrix_b = matrix_service.parse_matrix(payload.matrix_b)
+    except parsing.ParseSecurityError as exc:
+        return _error(request, OperationType.MATRIX_OPERATION, ErrorCode.PARSE_ERROR, str(exc))
+    except ComplexityLimitError as exc:
+        return _error(request, OperationType.MATRIX_OPERATION, ErrorCode.COMPLEXITY_LIMIT, str(exc))
+
+    try:
+        if payload.operation in (MatrixOpKind.ADD, MatrixOpKind.SUBTRACT):
+            result = matrix_service.add_or_subtract(matrix_a, matrix_b, payload.operation)
+        else:
+            result = matrix_service.multiply(matrix_a, matrix_b)
+    except matrix_service.DimensionMismatchError as exc:
+        return _error(
+            request, OperationType.MATRIX_OPERATION, ErrorCode.DIMENSION_MISMATCH, str(exc)
+        )
+
+    return MathResponse(
+        success=True,
+        operation=OperationType.MATRIX_OPERATION,
+        request_id=request.state.request_id,
+        result_type=ResultType.MATRIX,
+        result_data=matrix_service.matrix_to_result_data(result.result_matrix),
+        steps=result.steps,
+        has_detailed_steps=result.has_detailed_steps,
+        warnings=result.warnings,
+        duration_ms=_duration_ms(request),
+    )
+
+
+@router.post("/matrix/determinant", response_model=MathResponse)
+async def matrix_determinant(payload: MatrixSingleRequest, request: Request) -> MathResponse:
+    log_request_event(request.state.request_id, "matrix_determinant_request")
+
+    try:
+        matrix = matrix_service.parse_matrix(payload.matrix)
+    except parsing.ParseSecurityError as exc:
+        return _error(request, OperationType.MATRIX_DETERMINANT, ErrorCode.PARSE_ERROR, str(exc))
+    except ComplexityLimitError as exc:
+        return _error(
+            request, OperationType.MATRIX_DETERMINANT, ErrorCode.COMPLEXITY_LIMIT, str(exc)
+        )
+
+    try:
+        result = matrix_service.determinant(matrix)
+    except matrix_service.DimensionMismatchError as exc:
+        return _error(
+            request, OperationType.MATRIX_DETERMINANT, ErrorCode.DIMENSION_MISMATCH, str(exc)
+        )
+
+    return MathResponse(
+        success=True,
+        operation=OperationType.MATRIX_DETERMINANT,
+        request_id=request.state.request_id,
+        result_type=ResultType.SCALAR,
+        result_text=str(result.value),
+        result_latex=sympy.latex(result.value),
+        result_approx=float(result.value) if result.value.is_real else None,
+        steps=result.steps,
+        has_detailed_steps=result.has_detailed_steps,
+        warnings=result.warnings,
+        duration_ms=_duration_ms(request),
+    )
+
+
+@router.post("/matrix/inverse", response_model=MathResponse)
+async def matrix_inverse(payload: MatrixSingleRequest, request: Request) -> MathResponse:
+    log_request_event(request.state.request_id, "matrix_inverse_request")
+
+    try:
+        matrix = matrix_service.parse_matrix(payload.matrix)
+    except parsing.ParseSecurityError as exc:
+        return _error(request, OperationType.MATRIX_INVERSE, ErrorCode.PARSE_ERROR, str(exc))
+    except ComplexityLimitError as exc:
+        return _error(request, OperationType.MATRIX_INVERSE, ErrorCode.COMPLEXITY_LIMIT, str(exc))
+
+    try:
+        result = matrix_service.inverse(matrix)
+    except matrix_service.DimensionMismatchError as exc:
+        return _error(request, OperationType.MATRIX_INVERSE, ErrorCode.DIMENSION_MISMATCH, str(exc))
+    except matrix_service.SingularMatrixError as exc:
+        return _error(request, OperationType.MATRIX_INVERSE, ErrorCode.SINGULAR_MATRIX, str(exc))
+
+    return MathResponse(
+        success=True,
+        operation=OperationType.MATRIX_INVERSE,
+        request_id=request.state.request_id,
+        result_type=ResultType.MATRIX,
+        result_data=matrix_service.matrix_to_result_data(result.result_matrix),
+        steps=result.steps,
+        has_detailed_steps=result.has_detailed_steps,
+        warnings=result.warnings,
+        duration_ms=_duration_ms(request),
+    )
+
+
+@router.post("/matrix/eigen", response_model=MathResponse)
+async def matrix_eigen(payload: MatrixEigenRequest, request: Request) -> MathResponse:
+    """Fase 2 — passthrough trivial real (sección 2)."""
+    log_request_event(request.state.request_id, "matrix_eigen_request")
+
+    try:
+        matrix = matrix_service.parse_matrix(payload.matrix)
+    except parsing.ParseSecurityError as exc:
+        return _error(request, OperationType.MATRIX_EIGEN, ErrorCode.PARSE_ERROR, str(exc))
+    except ComplexityLimitError as exc:
+        return _error(request, OperationType.MATRIX_EIGEN, ErrorCode.COMPLEXITY_LIMIT, str(exc))
+
+    try:
+        eigen_text = matrix_service.eigen(matrix)
+    except matrix_service.DimensionMismatchError as exc:
+        return _error(request, OperationType.MATRIX_EIGEN, ErrorCode.DIMENSION_MISMATCH, str(exc))
+
+    return MathResponse(
+        success=True,
+        operation=OperationType.MATRIX_EIGEN,
+        request_id=request.state.request_id,
+        result_text=eigen_text,
+        has_detailed_steps=False,
+        duration_ms=_duration_ms(request),
+    )
