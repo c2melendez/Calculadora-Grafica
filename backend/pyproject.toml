@@ -1,0 +1,28 @@
+[project]
+name = "calculadora-cientifica-backend"
+version = "0.1.0"
+description = "Calculadora científica web con SymPy — backend FastAPI"
+requires-python = ">=3.11"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# UP006/UP007/UP035/UP042/UP045: sugieren `list`/`dict`/`X | None`/`StrEnum`
+# en vez de `List`/`Dict`/`Optional`/`Union`/`(str, Enum)`. Se ignoran a
+# propósito porque app/schemas/responses.py y requests.py reproducen el
+# código Pydantic EXACTO de la spec (sección 4 y 5) — cambiar la sintaxis de
+# tipos, aunque sea equivalente, se consideró fuera de alcance de "no
+# redefinir/renombrar" los contratos (Mensaje 0, regla 3) y del resto de
+# módulos que copiarán este mismo estilo desde la spec.
+ignore = ["UP006", "UP007", "UP035", "UP042", "UP045"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

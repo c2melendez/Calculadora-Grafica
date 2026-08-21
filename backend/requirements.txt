@@ -1,0 +1,15 @@
+# sympy fijado según spec (sección 1) — no actualizar sin autorización explícita.
+sympy==1.13.3
+
+# Resto de dependencias: versiones estables recientes (spec, sección 1),
+# fijadas aquí como lockfile del proyecto (instaladas y verificadas en el
+# Módulo 1).
+fastapi==0.141.1
+uvicorn[standard]==0.52.3
+numpy==2.4.4
+httpx==0.28.1
+
+# Dependencias de desarrollo/test
+pytest==9.1.1
+ruff==0.16.3
+black==26.5.1
