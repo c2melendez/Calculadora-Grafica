@@ -46,7 +46,7 @@ function CopyButton({ text, label }: { text: string | null; label: string }) {
       type="button"
       onClick={handleClick}
       disabled={text === null}
-      className="rounded border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+      className="rounded border border-stone-300 px-3 py-1 text-xs text-stone-600 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
     >
       {justCopied ? "¡Copiado!" : label}
     </button>
@@ -56,7 +56,7 @@ function CopyButton({ text, label }: { text: string | null; label: string }) {
 export function ResultPanel({ result, isLoading }: ResultPanelProps) {
   if (isLoading) {
     return (
-      <div role="status" aria-live="polite" className="text-sm text-slate-400">
+      <div role="status" aria-live="polite" className="text-sm text-stone-400">
         Calculando…
       </div>
     );
@@ -64,7 +64,7 @@ export function ResultPanel({ result, isLoading }: ResultPanelProps) {
 
   if (result === null) {
     return (
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-stone-400">
         Introduce una expresión y envía el formulario para ver el resultado aquí.
       </p>
     );
@@ -72,7 +72,7 @@ export function ResultPanel({ result, isLoading }: ResultPanelProps) {
 
   if (!result.success) {
     return (
-      <div role="alert" aria-live="assertive" className="text-sm text-red-300">
+      <div role="alert" aria-live="assertive" className="text-sm text-red-600">
         <p className="font-medium">{result.error_code}</p>
         <p>{result.error_message}</p>
       </div>
@@ -92,16 +92,16 @@ export function ResultPanel({ result, isLoading }: ResultPanelProps) {
             className="text-lg"
           />
         ) : (
-          <p className="text-lg text-slate-100">{displayText}</p>
+          <p className="text-lg text-stone-900">{displayText}</p>
         )}
       </div>
 
       {!result.has_detailed_steps && (
-        <p className="text-xs text-amber-400">Procedimiento resumido (sin desglose paso a paso).</p>
+        <p className="text-xs text-amber-600">Procedimiento resumido (sin desglose paso a paso).</p>
       )}
 
       {result.warnings.length > 0 && (
-        <ul className="space-y-1 text-xs text-amber-300">
+        <ul className="space-y-1 text-xs text-amber-600">
           {result.warnings.map((warning, index) => (
             <li key={index}>⚠ {warning}</li>
           ))}

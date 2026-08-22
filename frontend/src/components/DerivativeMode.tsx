@@ -63,13 +63,13 @@ export function DerivativeMode() {
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-labelledby="derivative-mode-heading" className="space-y-4">
-      <h2 id="derivative-mode-heading" className="text-sm font-medium text-slate-300">
+    <form onSubmit={handleSubmit} aria-labelledby="derivative-mode-heading" className="space-y-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+      <h2 id="derivative-mode-heading" className="text-sm font-medium text-stone-600">
         Derivada
       </h2>
 
       <div className="space-y-1">
-        <label htmlFor="derivative-expression" className="block text-sm text-slate-300">
+        <label htmlFor="derivative-expression" className="block text-sm text-stone-600">
           Expresión
         </label>
         <input
@@ -78,7 +78,7 @@ export function DerivativeMode() {
           value={expression}
           onChange={(e) => setExpression(e.target.value)}
           aria-describedby="derivative-expression-hint"
-          className="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          className="w-full rounded border border-stone-300 bg-white px-3 py-2 text-sm"
         />
         <div id="derivative-expression-hint">
           <ImplicitMultiplicationHint />
@@ -87,7 +87,7 @@ export function DerivativeMode() {
 
       <div className="flex gap-4">
         <div className="space-y-1">
-          <label htmlFor="derivative-variable" className="block text-sm text-slate-300">
+          <label htmlFor="derivative-variable" className="block text-sm text-stone-600">
             Variable
           </label>
           <input
@@ -95,11 +95,11 @@ export function DerivativeMode() {
             type="text"
             value={variable}
             onChange={(e) => setVariable(e.target.value)}
-            className="w-20 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm"
+            className="w-20 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="derivative-order" className="block text-sm text-slate-300">
+          <label htmlFor="derivative-order" className="block text-sm text-stone-600">
             Orden
           </label>
           <input
@@ -109,25 +109,25 @@ export function DerivativeMode() {
             max={5}
             value={order}
             onChange={(e) => setOrder(Number(e.target.value))}
-            className="w-20 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm"
+            className="w-20 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
           />
         </div>
       </div>
 
       {validationError && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-red-600">
           {validationError}
         </p>
       )}
 
       <button
         type="submit"
-        className="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
       >
         Derivar
       </button>
 
-      <div className="border-t border-slate-800 pt-4">
+      <div className="border-t border-stone-200 pt-4">
         <ResultPanel result={lastResult} isLoading={isLoading} />
       </div>
     </form>

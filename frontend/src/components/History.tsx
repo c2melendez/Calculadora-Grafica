@@ -39,18 +39,18 @@ export function History() {
   }
 
   if (entries.length === 0) {
-    return <p className="text-sm text-slate-500">Todavía no hay historial en esta sesión.</p>;
+    return <p className="text-sm text-stone-400">Todavía no hay historial en esta sesión.</p>;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-slate-300">Historial</h2>
+        <h2 className="text-sm font-medium text-stone-600">Historial</h2>
         <button
           type="button"
           onClick={clearHistory}
           aria-label="Borrar historial"
-          className="text-xs text-slate-400 hover:text-slate-200"
+          className="text-xs text-stone-400 hover:text-stone-800"
         >
           Borrar historial
         </button>
@@ -60,17 +60,17 @@ export function History() {
         {entries.map((entry: HistoryEntry) => (
           <li
             key={entry.id}
-            className="flex items-center justify-between rounded border border-slate-800 bg-slate-900/40 px-3 py-2"
+            className="flex items-center justify-between rounded border border-stone-200 bg-stone-50 px-3 py-2"
           >
             <div>
-              <p className="text-sm text-slate-200">{entry.label}</p>
-              <p className="text-xs text-slate-500">{entry.operation}</p>
+              <p className="text-sm text-stone-800">{entry.label}</p>
+              <p className="text-xs text-stone-400">{entry.operation}</p>
             </div>
             <button
               type="button"
               onClick={() => handleReuse(entry.id)}
               aria-label={`Reusar entrada: ${entry.label}`}
-              className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
+              className="rounded border border-stone-300 px-2 py-1 text-xs text-stone-600 hover:bg-stone-100"
             >
               Reusar
             </button>
@@ -79,13 +79,13 @@ export function History() {
       </ul>
 
       {reuseError && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-red-600">
           {reuseError}
         </p>
       )}
 
       {(isReusing || reusedResult) && (
-        <div className="border-t border-slate-800 pt-4">
+        <div className="border-t border-stone-200 pt-4">
           <ResultPanel result={reusedResult} isLoading={isReusing} />
         </div>
       )}

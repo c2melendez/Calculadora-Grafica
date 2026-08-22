@@ -84,27 +84,27 @@ export function GraphMode() {
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-labelledby="graph-mode-heading" className="space-y-4">
-      <h2 id="graph-mode-heading" className="text-sm font-medium text-slate-300">
+    <form onSubmit={handleSubmit} aria-labelledby="graph-mode-heading" className="space-y-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+      <h2 id="graph-mode-heading" className="text-sm font-medium text-stone-600">
         Gráficas
       </h2>
 
       <div className="space-y-2">
-        <span className="block text-sm text-slate-300">Expresiones (hasta {MAX_EXPRESSIONS})</span>
+        <span className="block text-sm text-stone-600">Expresiones (hasta {MAX_EXPRESSIONS})</span>
         {expressions.map((expr, index) => (
           <div key={index} className="flex gap-2">
             <input
               aria-label={`Expresión ${index + 1}`}
               value={expr}
               onChange={(e) => updateExpression(index, e.target.value)}
-              className="flex-1 rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+              className="flex-1 rounded border border-stone-300 bg-white px-3 py-2 text-sm"
             />
             {expressions.length > 1 && (
               <button
                 type="button"
                 onClick={() => removeExpressionField(index)}
                 aria-label={`Eliminar expresión ${index + 1}`}
-                className="text-sm text-slate-400 hover:text-slate-200"
+                className="text-sm text-stone-400 hover:text-stone-800"
               >
                 ✕
               </button>
@@ -116,7 +116,7 @@ export function GraphMode() {
           <button
             type="button"
             onClick={addExpressionField}
-            className="text-sm text-sky-400 hover:text-sky-300"
+            className="text-sm text-blue-600 hover:text-blue-500"
           >
             + Añadir expresión
           </button>
@@ -125,7 +125,7 @@ export function GraphMode() {
 
       <div className="flex flex-wrap gap-4">
         <div className="space-y-1">
-          <label htmlFor="graph-variable" className="block text-sm text-slate-300">
+          <label htmlFor="graph-variable" className="block text-sm text-stone-600">
             Variable
           </label>
           <input
@@ -133,11 +133,11 @@ export function GraphMode() {
             type="text"
             value={variable}
             onChange={(e) => setVariable(e.target.value)}
-            className="w-20 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm"
+            className="w-20 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph-x-min" className="block text-sm text-slate-300">
+          <label htmlFor="graph-x-min" className="block text-sm text-stone-600">
             x mínimo (opcional)
           </label>
           <input
@@ -145,11 +145,11 @@ export function GraphMode() {
             type="text"
             value={xMin}
             onChange={(e) => setXMin(e.target.value)}
-            className="w-24 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm"
+            className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph-x-max" className="block text-sm text-slate-300">
+          <label htmlFor="graph-x-max" className="block text-sm text-stone-600">
             x máximo (opcional)
           </label>
           <input
@@ -157,11 +157,11 @@ export function GraphMode() {
             type="text"
             value={xMax}
             onChange={(e) => setXMax(e.target.value)}
-            className="w-24 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm"
+            className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph-samples" className="block text-sm text-slate-300">
+          <label htmlFor="graph-samples" className="block text-sm text-stone-600">
             Muestras (opcional)
           </label>
           <input
@@ -169,18 +169,18 @@ export function GraphMode() {
             type="text"
             value={samples}
             onChange={(e) => setSamples(e.target.value)}
-            className="w-24 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm"
+            className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph-angle-unit" className="block text-sm text-slate-300">
+          <label htmlFor="graph-angle-unit" className="block text-sm text-stone-600">
             Unidad angular
           </label>
           <select
             id="graph-angle-unit"
             value={angleUnit}
             onChange={(e) => setAngleUnit(e.target.value as "rad" | "deg")}
-            className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm"
+            className="rounded border border-stone-300 bg-white px-2 py-1 text-sm"
           >
             <option value="rad">Radianes</option>
             <option value="deg">Grados</option>
@@ -189,22 +189,22 @@ export function GraphMode() {
       </div>
 
       {validationError && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-red-600">
           {validationError}
         </p>
       )}
 
       <button
         type="submit"
-        className="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
       >
         Graficar
       </button>
 
-      <div className="border-t border-slate-800 pt-4">
+      <div className="border-t border-stone-200 pt-4">
         {!isLoading && lastResult?.success && lastResult.graph_data ? (
           <Suspense
-            fallback={<p className="text-sm text-slate-400">Cargando visor de gráficas…</p>}
+            fallback={<p className="text-sm text-stone-400">Cargando visor de gráficas…</p>}
           >
             <GraphViewer data={lastResult.graph_data} />
           </Suspense>

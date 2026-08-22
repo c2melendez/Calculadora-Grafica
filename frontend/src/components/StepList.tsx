@@ -20,21 +20,21 @@ export function StepList({ steps }: StepListProps) {
       {steps.map((step) => (
         <li
           key={step.index}
-          className="rounded border border-slate-800 bg-slate-900/40 p-3 fade-in"
+          className="rounded border border-stone-200 bg-stone-50 p-3 fade-in"
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-200">{step.title}</span>
+            <span className="text-sm font-medium text-stone-800">{step.title}</span>
             {step.rule && (
-              <span className="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
+              <span className="rounded bg-stone-100 px-2 py-0.5 text-xs text-stone-400">
                 {step.rule}
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-slate-400">{step.description}</p>
+          <p className="mt-1 text-sm text-stone-400">{step.description}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <MathRenderer latex={step.latex_before} className="text-slate-300" />
-            <span className="text-slate-600">→</span>
-            <MathRenderer latex={step.latex_after} className="text-slate-100" />
+            <MathRenderer latex={step.latex_before} className="text-stone-600" />
+            <span className="text-stone-500">→</span>
+            <MathRenderer latex={step.latex_after} className="text-stone-900" />
           </div>
         </li>
       ))}
