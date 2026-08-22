@@ -19,12 +19,13 @@ describe("MathKeyboard", () => {
     };
     const { rerender } = render(<MathKeyboard value={value} onChange={onChange} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Insertar sin" }));
-    expect(value).toBe("sin()");
+    fireEvent.click(screen.getByRole("button", { name: "Insertar π" }));
+    expect(value).toBe("pi");
 
     rerender(<MathKeyboard value={value} onChange={onChange} />);
-    fireEvent.click(screen.getByRole("button", { name: "Insertar π" }));
-    expect(value).toBe("sin()pi");
+    fireEvent.click(screen.getByRole("tab", { name: "Funciones" }));
+    fireEvent.click(screen.getByRole("button", { name: "Insertar sin" }));
+    expect(value).toBe("pisin()");
   });
 
   it("muestra la vista previa cuando el valor inicial ya tiene contenido", () => {
