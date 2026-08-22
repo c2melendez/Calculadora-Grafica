@@ -3,7 +3,11 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+}
+
+body {
+  background-color: #fbf9f4;
 }
 
 /* Animaciones sutiles (sección 11) — respeta prefers-reduced-motion. */
