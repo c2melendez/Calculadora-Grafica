@@ -9,7 +9,12 @@ import sympy
 from fastapi import APIRouter, Request
 
 from app.core.logging import log_request_event
-from app.schemas.requests import MatrixEigenRequest, MatrixOperationRequest, MatrixSingleRequest
+from app.schemas.requests import (
+    MatrixEigenRequest,
+    MatrixOperationRequest,
+    MatrixPowerRequest,
+    MatrixSingleRequest,
+)
 from app.schemas.responses import ErrorCode, MathResponse, MatrixOpKind, OperationType, ResultType
 from app.services import matrix_service, parsing
 from app.services.ast_validator import ComplexityLimitError
@@ -126,6 +131,65 @@ async def matrix_inverse(payload: MatrixSingleRequest, request: Request) -> Math
     return MathResponse(
         success=True,
         operation=OperationType.MATRIX_INVERSE,
+        request_id=request.state.request_id,
+        result_type=ResultType.MATRIX,
+        result_data=matrix_service.matrix_to_result_data(result.result_matrix),
+        steps=result.steps,
+        has_detailed_steps=result.has_detailed_steps,
+        warnings=result.warnings,
+        duration_ms=_duration_ms(request),
+    )
+
+
+@router.post("/matrix/transpose", response_model=MathResponse)
+async def matrix_transpose(payload: MatrixSingleRequest, request: Request) -> MathResponse:
+    log_request_event(request.state.request_id, "matrix_transpose_request")
+
+    try:
+        matrix = matrix_service.parse_matrix(payload.matrix)
+    except parsing.ParseSecurityError as exc:
+        return _error(request, OperationType.MATRIX_TRANSPOSE, ErrorCode.PARSE_ERROR, str(exc))
+    except ComplexityLimitError as exc:
+        return _error(
+            request, OperationType.MATRIX_TRANSPOSE, ErrorCode.COMPLEXITY_LIMIT, str(exc)
+        )
+
+    result = matrix_service.transpose(matrix)
+
+    return MathResponse(
+        success=True,
+        operation=OperationType.MATRIX_TRANSPOSE,
+        request_id=request.state.request_id,
+        result_type=ResultType.MATRIX,
+        result_data=matrix_service.matrix_to_result_data(result.result_matrix),
+        steps=result.steps,
+        has_detailed_steps=result.has_detailed_steps,
+        warnings=result.warnings,
+        duration_ms=_duration_ms(request),
+    )
+
+
+@router.post("/matrix/power", response_model=MathResponse)
+async def matrix_power(payload: MatrixPowerRequest, request: Request) -> MathResponse:
+    log_request_event(request.state.request_id, "matrix_power_request")
+
+    try:
+        matrix = matrix_service.parse_matrix(payload.matrix)
+    except parsing.ParseSecurityError as exc:
+        return _error(request, OperationType.MATRIX_POWER, ErrorCode.PARSE_ERROR, str(exc))
+    except ComplexityLimitError as exc:
+        return _error(request, OperationType.MATRIX_POWER, ErrorCode.COMPLEXITY_LIMIT, str(exc))
+
+    try:
+        result = matrix_service.power(matrix, payload.exponent)
+    except matrix_service.DimensionMismatchError as exc:
+        return _error(request, OperationType.MATRIX_POWER, ErrorCode.DIMENSION_MISMATCH, str(exc))
+    except matrix_service.SingularMatrixError as exc:
+        return _error(request, OperationType.MATRIX_POWER, ErrorCode.SINGULAR_MATRIX, str(exc))
+
+    return MathResponse(
+        success=True,
+        operation=OperationType.MATRIX_POWER,
         request_id=request.state.request_id,
         result_type=ResultType.MATRIX,
         result_data=matrix_service.matrix_to_result_data(result.result_matrix),
