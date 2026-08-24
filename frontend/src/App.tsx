@@ -18,6 +18,7 @@ import { GraphMode } from "./components/GraphMode";
 import { History } from "./components/History";
 import { IntegralMode } from "./components/IntegralMode";
 import { MatrixMode } from "./components/MatrixMode";
+import { SystemMode } from "./components/SystemMode";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { useUIStore, type CalculatorMode } from "./store/useUIStore";
 
@@ -26,6 +27,7 @@ const MODE_LABELS: Record<CalculatorMode, string> = {
   derivative: "Derivada",
   integral: "Integral",
   equation: "Ecuación",
+  system: "Sistemas",
   matrix: "Matrices",
   graph: "Gráficas",
 };
@@ -35,6 +37,7 @@ const MODE_ORDER: CalculatorMode[] = [
   "derivative",
   "integral",
   "equation",
+  "system",
   "matrix",
   "graph",
 ];
@@ -49,6 +52,8 @@ function ActiveModeForm({ mode }: { mode: CalculatorMode }) {
       return <IntegralMode />;
     case "equation":
       return <EquationMode />;
+    case "system":
+      return <SystemMode />;
     case "matrix":
       return <MatrixMode />;
     case "graph":
