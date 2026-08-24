@@ -4,16 +4,22 @@
  * automática) + `angle_unit`, conectado a `POST /solve`.
  */
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import type { MathResponse } from "../api/client";
 import { submitAndRecord } from "../api/submitWithHistory";
 import { useUIStore } from "../store/useUIStore";
-import { ImplicitMultiplicationHint } from "./ImplicitMultiplicationHint";
+import { latexToBackendSyntax, NaturalMathField } from "./NaturalMathField";
+import { NaturalMathKeyboard } from "./NaturalMathKeyboard";
 import { ResultPanel } from "./ResultPanel";
+import type { MathfieldElement } from "mathlive";
+
+const INEQUALITY_OPERATOR_PATTERN = /[<>]/;
 
 export function EquationMode() {
-  const [equation, setEquation] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
+  const [latex, setLatex] = useState("");
+  const [mathField, setMathField] = useState<MathfieldElement | null>(null);
   const [variable, setVariable] = useState("");
   const [angleUnit, setAngleUnit] = useState<"rad" | "deg">("rad");
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -25,7 +31,7 @@ export function EquationMode() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    const trimmedEquation = equation.trim();
+    const trimmedEquation = latexToBackendSyntax(latex);
     if (!trimmedEquation) {
       setValidationError("La ecuación no puede estar vacía.");
       return;
@@ -37,15 +43,26 @@ export function EquationMode() {
     setLoading(true);
     setErrorMessage(null);
     try {
-      const result = await submitAndRecord(
-        "/solve",
-        {
-          equation: trimmedEquation,
-          angle_unit: angleUnit,
-          ...(trimmedVariable ? { variable: trimmedVariable } : {}),
-        },
-        trimmedEquation,
-      );
+      const isInequality = INEQUALITY_OPERATOR_PATTERN.test(trimmedEquation);
+
+      const result = isInequality
+        ? await submitAndRecord(
+            "/inequality",
+            {
+              inequality: trimmedEquation,
+              ...(trimmedVariable ? { variable: trimmedVariable } : {}),
+            },
+            trimmedEquation,
+          )
+        : await submitAndRecord(
+            "/solve",
+            {
+              equation: trimmedEquation,
+              angle_unit: angleUnit,
+              ...(trimmedVariable ? { variable: trimmedVariable } : {}),
+            },
+            trimmedEquation,
+          );
       setLastResult(result);
       if (!result.success) {
         setErrorMessage(result.error_message ?? "Ocurrió un error.");
@@ -56,26 +73,24 @@ export function EquationMode() {
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-labelledby="equation-mode-heading" className="space-y-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="equation-mode-heading" className="space-y-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
       <h2 id="equation-mode-heading" className="text-sm font-medium text-stone-600">
         Ecuación
       </h2>
 
       <div className="space-y-1">
-        <label htmlFor="equation-input" className="block text-sm text-stone-600">
-          Ecuación
-        </label>
-        <input
-          id="equation-input"
-          type="text"
-          value={equation}
-          onChange={(e) => setEquation(e.target.value)}
-          aria-describedby="equation-expression-hint"
-          className="w-full rounded border border-stone-300 bg-white px-3 py-2 text-sm"
+        <NaturalMathField
+          latex={latex}
+          onLatexChange={setLatex}
+          ariaLabel="Ecuación"
+          placeholder="2x+1=5  (o  x+3>0 para desigualdades)"
+          fieldRef={setMathField}
         />
-        <div id="equation-expression-hint">
-          <ImplicitMultiplicationHint />
-        </div>
+        <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
+        <p className="px-1 text-xs text-stone-400" role="note">
+          Escribe = para resolver una ecuación, o &lt;, &gt;, ≤, ≥ para una desigualdad — se
+          detecta automáticamente.
+        </p>
       </div>
 
       <div className="space-y-1">

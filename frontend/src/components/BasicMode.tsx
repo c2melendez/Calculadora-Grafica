@@ -5,12 +5,13 @@
  */
 
 import { useRef, useState, type FormEvent } from "react";
+import type { MathfieldElement } from "mathlive";
 
 import type { MathResponse } from "../api/client";
 import { submitAndRecord } from "../api/submitWithHistory";
 import { useUIStore } from "../store/useUIStore";
-import { ImplicitMultiplicationHint } from "./ImplicitMultiplicationHint";
-import { MathKeyboard } from "./MathKeyboard";
+import { latexToBackendSyntax, NaturalMathField } from "./NaturalMathField";
+import { NaturalMathKeyboard } from "./NaturalMathKeyboard";
 import { ResultPanel } from "./ResultPanel";
 
 interface SubstitutionRow {
@@ -18,11 +19,17 @@ interface SubstitutionRow {
   value: string;
 }
 
-const EXAMPLES = ["2*x + sqrt(9)", "sin(pi/4)", "(3+4)**2", "log(100)"];
+const EXAMPLES: { display: string; latex: string }[] = [
+  { display: "2x + √9", latex: "2x+\\sqrt{9}" },
+  { display: "sin(π/4)", latex: "\\sin\\left(\\frac{\\pi}{4}\\right)" },
+  { display: "(3+4)²", latex: "(3+4)^{2}" },
+  { display: "log(100)", latex: "\\log\\left(100\\right)" },
+];
 
 export function BasicMode() {
   const formRef = useRef<HTMLFormElement>(null);
-  const [expression, setExpression] = useState("");
+  const [mathField, setMathField] = useState<MathfieldElement | null>(null);
+  const [latex, setLatex] = useState("");
   const [angleUnit, setAngleUnit] = useState<"rad" | "deg">("rad");
   const [substitutions, setSubstitutions] = useState<SubstitutionRow[]>([]);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -48,7 +55,7 @@ export function BasicMode() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    const trimmed = expression.trim();
+    const trimmed = latexToBackendSyntax(latex);
     if (!trimmed) {
       setValidationError("La expresión no puede estar vacía.");
       return;
@@ -92,19 +99,13 @@ export function BasicMode() {
       </h2>
 
       <div>
-        <label htmlFor="basic-expression" className="sr-only">
-          Expresión
-        </label>
         <div className="relative">
-          <input
-            id="basic-expression"
-            type="text"
-            value={expression}
-            onChange={(e) => setExpression(e.target.value)}
-            placeholder="Ingresa un problema, p. ej. 2*x + sqrt(9)"
-            aria-describedby="basic-expression-hint"
-            aria-invalid={validationError !== null}
-            className="w-full rounded-full border border-stone-300 bg-white py-3 pl-5 pr-14 text-base text-stone-900 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          <NaturalMathField
+            latex={latex}
+            onLatexChange={setLatex}
+            ariaLabel="Expresión"
+            placeholder="2x + √9"
+            fieldRef={setMathField}
           />
           <button
             type="submit"
@@ -114,9 +115,6 @@ export function BasicMode() {
             →
           </button>
         </div>
-        <div id="basic-expression-hint" className="mt-1.5 px-2">
-          <ImplicitMultiplicationHint />
-        </div>
         {validationError && (
           <p role="alert" className="mt-1 px-2 text-sm text-red-600">
             {validationError}
@@ -124,23 +122,18 @@ export function BasicMode() {
         )}
       </div>
 
-      <MathKeyboard
-        value={expression}
-        onChange={setExpression}
-        inputId="basic-expression"
-        onSubmit={() => formRef.current?.requestSubmit()}
-      />
+      <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
 
       <div className="flex flex-wrap gap-2">
         <span className="pt-1.5 text-xs font-medium text-stone-400">Ejemplos:</span>
         {EXAMPLES.map((example) => (
           <button
-            key={example}
+            key={example.display}
             type="button"
-            onClick={() => setExpression(example)}
+            onClick={() => setLatex(example.latex)}
             className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs text-stone-600 hover:border-blue-300 hover:text-blue-600"
           >
-            {example}
+            {example.display}
           </button>
         ))}
       </div>

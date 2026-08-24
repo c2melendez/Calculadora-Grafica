@@ -11,7 +11,29 @@ import { submitAndRecord } from "../api/submitWithHistory";
 import { useUIStore } from "../store/useUIStore";
 import { ResultPanel } from "./ResultPanel";
 
-type Operation = "add" | "subtract" | "multiply";
+type Operation =
+  | "add"
+  | "subtract"
+  | "multiply"
+  | "transpose"
+  | "determinant"
+  | "inverse"
+  | "power"
+  | "eigen";
+
+const OPERATION_LABELS: Record<Operation, string> = {
+  add: "Suma (A + B)",
+  subtract: "Resta (A − B)",
+  multiply: "Multiplicación (A × B)",
+  transpose: "Transposición (Aᵀ)",
+  determinant: "Determinante (|A|)",
+  inverse: "Inversa (A⁻¹)",
+  power: "Potencia (Aⁿ)",
+  eigen: "Eigenvalores y eigenvectores",
+};
+
+const NEEDS_MATRIX_B: ReadonlySet<Operation> = new Set(["add", "subtract", "multiply"]);
+const NEEDS_EXPONENT: ReadonlySet<Operation> = new Set(["power"]);
 
 function emptyMatrix(rows: number, cols: number): string[][] {
   return Array.from({ length: rows }, () => Array.from({ length: cols }, () => ""));
@@ -105,6 +127,7 @@ export function MatrixMode() {
   const [rowsB, setRowsB] = useState(2);
   const [colsB, setColsB] = useState(2);
   const [matrixB, setMatrixB] = useState<string[][]>(emptyMatrix(2, 2));
+  const [exponent, setExponent] = useState("2");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<MathResponse | null>(null);
 
@@ -130,8 +153,17 @@ export function MatrixMode() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    if (hasEmptyCell(matrixA) || hasEmptyCell(matrixB)) {
-      setValidationError("Todas las celdas de ambas matrices deben tener un valor.");
+
+    if (hasEmptyCell(matrixA)) {
+      setValidationError("Todas las celdas de la matriz A deben tener un valor.");
+      return;
+    }
+    if (NEEDS_MATRIX_B.has(operation) && hasEmptyCell(matrixB)) {
+      setValidationError("Todas las celdas de la matriz B deben tener un valor.");
+      return;
+    }
+    if (NEEDS_EXPONENT.has(operation) && (exponent.trim() === "" || !/^-?\d+$/.test(exponent.trim()))) {
+      setValidationError("El exponente debe ser un número entero.");
       return;
     }
     setValidationError(null);
@@ -139,15 +171,31 @@ export function MatrixMode() {
     setLoading(true);
     setErrorMessage(null);
     try {
-      const result = await submitAndRecord(
-        "/matrix/operations",
-        {
-          operation,
-          matrix_a: matrixA,
-          matrix_b: matrixB,
-        },
-        `Matrices ${rowsA}x${colsA} ${operation} ${rowsB}x${colsB}`,
-      );
+      let result: MathResponse;
+      const label = `Matriz A ${rowsA}x${colsA} — ${OPERATION_LABELS[operation]}`;
+
+      if (operation === "add" || operation === "subtract" || operation === "multiply") {
+        result = await submitAndRecord(
+          "/matrix/operations",
+          { operation, matrix_a: matrixA, matrix_b: matrixB },
+          `Matrices ${rowsA}x${colsA} ${operation} ${rowsB}x${colsB}`,
+        );
+      } else if (operation === "transpose") {
+        result = await submitAndRecord("/matrix/transpose", { matrix: matrixA }, label);
+      } else if (operation === "determinant") {
+        result = await submitAndRecord("/matrix/determinant", { matrix: matrixA }, label);
+      } else if (operation === "inverse") {
+        result = await submitAndRecord("/matrix/inverse", { matrix: matrixA }, label);
+      } else if (operation === "power") {
+        result = await submitAndRecord(
+          "/matrix/power",
+          { matrix: matrixA, exponent: Number(exponent) },
+          `${label} (n=${exponent})`,
+        );
+      } else {
+        result = await submitAndRecord("/matrix/eigen", { matrix: matrixA }, label);
+      }
+
       setLastResult(result);
       if (!result.success) {
         setErrorMessage(result.error_message ?? "Ocurrió un error.");
@@ -173,9 +221,11 @@ export function MatrixMode() {
           onChange={(e) => setOperation(e.target.value as Operation)}
           className="rounded border border-stone-300 bg-white px-2 py-1 text-sm"
         >
-          <option value="add">Suma</option>
-          <option value="subtract">Resta</option>
-          <option value="multiply">Multiplicación</option>
+          {(Object.keys(OPERATION_LABELS) as Operation[]).map((op) => (
+            <option key={op} value={op}>
+              {OPERATION_LABELS[op]}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -194,20 +244,38 @@ export function MatrixMode() {
         }
       />
 
-      <MatrixGrid
-        label="Matriz B"
-        matrix={matrixB}
-        rows={rowsB}
-        cols={colsB}
-        onDimensionsChange={handleDimensionsB}
-        onCellChange={(r, c, value) =>
-          setMatrixB((current) =>
-            current.map((row, i) =>
-              i === r ? row.map((cell, j) => (j === c ? value : cell)) : row,
-            ),
-          )
-        }
-      />
+      {NEEDS_EXPONENT.has(operation) && (
+        <div className="space-y-1">
+          <label htmlFor="matrix-exponent" className="block text-sm text-stone-600">
+            Exponente (entero, de -10 a 10)
+          </label>
+          <input
+            id="matrix-exponent"
+            type="text"
+            inputMode="numeric"
+            value={exponent}
+            onChange={(e) => setExponent(e.target.value)}
+            className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+          />
+        </div>
+      )}
+
+      {NEEDS_MATRIX_B.has(operation) && (
+        <MatrixGrid
+          label="Matriz B"
+          matrix={matrixB}
+          rows={rowsB}
+          cols={colsB}
+          onDimensionsChange={handleDimensionsB}
+          onCellChange={(r, c, value) =>
+            setMatrixB((current) =>
+              current.map((row, i) =>
+                i === r ? row.map((cell, j) => (j === c ? value : cell)) : row,
+              ),
+            )
+          }
+        />
+      )}
 
       {validationError && (
         <p role="alert" className="text-sm text-red-600">

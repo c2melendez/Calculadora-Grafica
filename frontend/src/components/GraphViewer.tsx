@@ -29,6 +29,17 @@ interface PlotlyModule {
 }
 
 function traceToPlotly(trace: GraphData["traces"][number]) {
+  if (trace.type === "surface") {
+    return {
+      x: trace.x,
+      y: trace.y,
+      z: trace.z,
+      type: "surface" as const,
+      name: trace.name,
+      colorscale: "Viridis" as const,
+      showscale: false,
+    };
+  }
   return {
     x: trace.x,
     y: trace.y,
@@ -37,6 +48,10 @@ function traceToPlotly(trace: GraphData["traces"][number]) {
     name: trace.name,
     connectgaps: false, // los `null` (discontinuidades, sección 10) cortan la línea
   };
+}
+
+function isSurface(data: GraphData): boolean {
+  return data.traces.some((trace) => trace.type === "surface");
 }
 
 interface GraphViewerProps {
@@ -68,14 +83,25 @@ export default function GraphViewer({ data }: GraphViewerProps) {
         await Plotly.newPlot(
           safeContainer,
           data.traces.map(traceToPlotly),
-          {
-            xaxis: { range: data.x_range, title: "x" },
-            yaxis: data.y_range ? { range: data.y_range } : {},
-            paper_bgcolor: "transparent",
-            plot_bgcolor: "transparent",
-            font: { color: "#e2e8f0" },
-            margin: { t: 20, r: 20, b: 40, l: 50 },
-          },
+          isSurface(data)
+            ? {
+                scene: {
+                  xaxis: { title: "x" },
+                  yaxis: { title: "y" },
+                  zaxis: { title: "z" },
+                },
+                paper_bgcolor: "transparent",
+                font: { color: "#44403c" },
+                margin: { t: 20, r: 20, b: 20, l: 20 },
+              }
+            : {
+                xaxis: { range: data.x_range, title: "x" },
+                yaxis: data.y_range ? { range: data.y_range } : {},
+                paper_bgcolor: "transparent",
+                plot_bgcolor: "transparent",
+                font: { color: "#44403c" },
+                margin: { t: 20, r: 20, b: 40, l: 50 },
+              },
           { responsive: true, displaylogo: false },
         );
       } catch {
@@ -114,7 +140,7 @@ export default function GraphViewer({ data }: GraphViewerProps) {
 
   if (loadError) {
     return (
-      <p role="alert" className="text-sm text-red-400">
+      <p role="alert" className="text-sm text-red-600">
         {loadError}
       </p>
     );
@@ -123,7 +149,7 @@ export default function GraphViewer({ data }: GraphViewerProps) {
   return (
     <div className="space-y-2">
       {data.points_truncated && (
-        <p className="text-xs text-amber-400">
+        <p className="text-xs text-amber-600">
           ⚠ Se redujo la densidad de muestreo respecto a lo solicitado.
         </p>
       )}
@@ -131,19 +157,19 @@ export default function GraphViewer({ data }: GraphViewerProps) {
         ref={containerRef}
         role="img"
         aria-label="Gráfica de las expresiones ingresadas"
-        className="h-96 w-full rounded border border-slate-800"
+        className="h-96 w-full rounded border border-stone-200"
       />
       <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={handleDownloadPng}
           aria-label="Descargar gráfica como PNG"
-          className="rounded border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
+          className="rounded border border-stone-300 px-3 py-1 text-xs text-stone-600 hover:bg-stone-100"
         >
           Descargar PNG
         </button>
         {downloadError && (
-          <span role="alert" className="text-xs text-red-400">
+          <span role="alert" className="text-xs text-red-600">
             {downloadError}
           </span>
         )}

@@ -4,16 +4,22 @@
  * conectado a `POST /integral`.
  */
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import type { MathResponse } from "../api/client";
 import { submitAndRecord } from "../api/submitWithHistory";
 import { useUIStore } from "../store/useUIStore";
-import { ImplicitMultiplicationHint } from "./ImplicitMultiplicationHint";
+import { latexToBackendSyntax, NaturalMathField } from "./NaturalMathField";
+import { NaturalMathKeyboard } from "./NaturalMathKeyboard";
 import { ResultPanel } from "./ResultPanel";
+import type { MathfieldElement } from "mathlive";
+
+const INFINITE_BOUND_PATTERN = /^-?oo$/;
 
 export function IntegralMode() {
-  const [expression, setExpression] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
+  const [latex, setLatex] = useState("");
+  const [mathField, setMathField] = useState<MathfieldElement | null>(null);
   const [variable, setVariable] = useState("x");
   const [lowerBound, setLowerBound] = useState("");
   const [upperBound, setUpperBound] = useState("");
@@ -26,7 +32,7 @@ export function IntegralMode() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    const trimmedExpression = expression.trim();
+    const trimmedExpression = latexToBackendSyntax(latex);
     const trimmedLower = lowerBound.trim();
     const trimmedUpper = upperBound.trim();
 
@@ -43,15 +49,32 @@ export function IntegralMode() {
     setLoading(true);
     setErrorMessage(null);
     try {
-      const result = await submitAndRecord(
-        "/integral",
-        {
-          expression: trimmedExpression,
-          variable: variable.trim() || "x",
-          ...(trimmedLower !== "" ? { lower_bound: trimmedLower, upper_bound: trimmedUpper } : {}),
-        },
-        `∫ ${trimmedExpression}`,
-      );
+      const isImproper =
+        trimmedLower !== "" &&
+        (INFINITE_BOUND_PATTERN.test(trimmedLower) || INFINITE_BOUND_PATTERN.test(trimmedUpper));
+
+      const result = isImproper
+        ? await submitAndRecord(
+            "/integral/improper",
+            {
+              expression: trimmedExpression,
+              variable: variable.trim() || "x",
+              lower_bound: trimmedLower,
+              upper_bound: trimmedUpper,
+            },
+            `∫ ${trimmedExpression} (impropia)`,
+          )
+        : await submitAndRecord(
+            "/integral",
+            {
+              expression: trimmedExpression,
+              variable: variable.trim() || "x",
+              ...(trimmedLower !== ""
+                ? { lower_bound: trimmedLower, upper_bound: trimmedUpper }
+                : {}),
+            },
+            `∫ ${trimmedExpression}`,
+          );
       setLastResult(result);
       if (!result.success) {
         setErrorMessage(result.error_message ?? "Ocurrió un error.");
@@ -62,26 +85,20 @@ export function IntegralMode() {
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-labelledby="integral-mode-heading" className="space-y-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="integral-mode-heading" className="space-y-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
       <h2 id="integral-mode-heading" className="text-sm font-medium text-stone-600">
         Integral
       </h2>
 
       <div className="space-y-1">
-        <label htmlFor="integral-expression" className="block text-sm text-stone-600">
-          Expresión
-        </label>
-        <input
-          id="integral-expression"
-          type="text"
-          value={expression}
-          onChange={(e) => setExpression(e.target.value)}
-          aria-describedby="integral-expression-hint"
-          className="w-full rounded border border-stone-300 bg-white px-3 py-2 text-sm"
+        <NaturalMathField
+          latex={latex}
+          onLatexChange={setLatex}
+          ariaLabel="Expresión"
+          placeholder="x^2"
+          fieldRef={setMathField}
         />
-        <div id="integral-expression-hint">
-          <ImplicitMultiplicationHint />
-        </div>
+        <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
       </div>
 
       <div className="flex gap-4">
@@ -99,7 +116,7 @@ export function IntegralMode() {
         </div>
         <div className="space-y-1">
           <label htmlFor="integral-lower" className="block text-sm text-stone-600">
-            Límite inferior (opcional)
+            Límite inferior (opcional; "oo"/"-oo" para impropia)
           </label>
           <input
             id="integral-lower"
