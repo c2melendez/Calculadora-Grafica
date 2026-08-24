@@ -433,3 +433,58 @@ def parse_expression_tree(text: str, *, allow_equation: bool = False) -> sympy.B
 
     rhs_expr = _parse_side(rhs_text, local_dict)
     return sympy.Eq(lhs_expr, rhs_expr)
+
+
+_INEQUALITY_OPERATORS = ["<=", ">=", "<", ">"]  # orden importa: <= antes que <
+
+
+def parse_inequality_tree(text: str) -> sympy.core.relational.Relational:
+    """`/inequality` (spec, `InequalityRequest`). Reutiliza toda la
+    infraestructura de seguridad de `parse_expression_tree` (etapas 1-9):
+    solo cambia qué operador separa los dos lados (`<,>,<=,>=` en vez de
+    `=`) y qué tipo de `Relational` de SymPy se construye al final."""
+    validate_length(text)
+    normalized = normalize_unicode(text)
+
+    found_operator = None
+    for operator in _INEQUALITY_OPERATORS:
+        if operator in normalized:
+            found_operator = operator
+            break
+    if found_operator is None:
+        raise ParseSecurityError(
+            "Se esperaba un operador de desigualdad (<, >, <=, >=) en la expresión."
+        )
+    if normalized.count(found_operator) > 1:
+        raise ParseSecurityError(
+            f"Se permite un único operador de desigualdad ('{found_operator}')."
+        )
+
+    idx = normalized.index(found_operator)
+    lhs_text = normalized[:idx]
+    rhs_text = normalized[idx + len(found_operator) :]
+    validate_length(lhs_text)
+    validate_length(rhs_text)
+
+    _validate_call_arity(normalized)
+
+    for side in (lhs_text, rhs_text):
+        validate_decimal_and_reject_scientific(side)
+
+    all_identifiers: List[str] = []
+    for side in (lhs_text, rhs_text):
+        for identifier in extract_candidate_identifiers(side):
+            if identifier not in all_identifiers:
+                all_identifiers.append(identifier)
+
+    local_dict, _used = classify_identifiers(all_identifiers)
+    lhs_expr = _parse_side(lhs_text, local_dict)
+    rhs_expr = _parse_side(rhs_text, local_dict)
+
+    relational_by_operator = {
+        "<": sympy.Lt,
+        ">": sympy.Gt,
+        "<=": sympy.Le,
+        ">=": sympy.Ge,
+    }
+    return relational_by_operator[found_operator](lhs_expr, rhs_expr)

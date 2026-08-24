@@ -234,6 +234,41 @@ def matrix_to_result_data(matrix: sympy.Matrix) -> List[List[str]]:
     return [[str(matrix[row, col]) for col in range(matrix.cols)] for row in range(matrix.rows)]
 
 
+def transpose(matrix: sympy.Matrix) -> MatrixOperationResult:
+    """`/matrix/transpose` — passthrough trivial (`Matrix.T`), sin pasos
+    detallados (no hay una secuencia de transformaciones intermedias que
+    narrar: es una única reindexación de celdas), igual patrón que
+    `/matrix/eigen` (Fase 2, sección 2)."""
+    return MatrixOperationResult(matrix.T, [], False, [])
+
+
+MAX_MATRIX_POWER_EXPONENT = 10
+
+
+def power(matrix: sympy.Matrix, exponent: int) -> MatrixOperationResult:
+    """`/matrix/power` — `Matrix ** exponent`. Requiere matriz cuadrada;
+    exponente negativo requiere matriz invertible (usa `Matrix.inv()`
+    internamente vía SymPy). Sin pasos detallados, mismo patrón que
+    `eigen`/`transpose`."""
+    if matrix.rows != matrix.cols:
+        raise DimensionMismatchError(
+            f"La potencia de una matriz requiere una matriz cuadrada; recibida {matrix.shape}."
+        )
+    if abs(exponent) > MAX_MATRIX_POWER_EXPONENT:
+        raise DimensionMismatchError(
+            f"Exponente fuera de rango permitido (máximo ±{MAX_MATRIX_POWER_EXPONENT})."
+        )
+    if exponent < 0 and matrix.det() == 0:
+        raise SingularMatrixError(
+            "La matriz es singular (determinante 0); no tiene inversa para potencia negativa."
+        )
+    if exponent == 0:
+        result_matrix = sympy.eye(matrix.rows)
+    else:
+        result_matrix = matrix**exponent
+    return MatrixOperationResult(result_matrix, [], False, [])
+
+
 def eigen(matrix: sympy.Matrix) -> str:
     """`/matrix/eigen` (Fase 2, sección 2: "Sí — passthrough trivial —
     `Matrix.eigenvals()`/`eigenvects()`"). Resultado directo de SymPy, sin
