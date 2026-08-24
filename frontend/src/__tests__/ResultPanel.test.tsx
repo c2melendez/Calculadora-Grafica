@@ -100,4 +100,81 @@ describe("ResultPanel", () => {
     expect(screen.getByText("Regla de la potencia")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copiar como LaTeX" })).toBeEnabled();
   });
+
+  it("renderiza una matriz (result_type: matrix, result_data: string[][])", () => {
+    render(
+      <ResultPanel
+        result={{
+          ...baseResult,
+          operation: "matrix_transpose",
+          result_type: "matrix",
+          result_text: null,
+          result_latex: null,
+          result_approx: null,
+          result_data: [
+            ["1", "4"],
+            ["2", "5"],
+          ],
+        }}
+        isLoading={false}
+      />,
+    );
+    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.getByText("4")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("5")).toBeInTheDocument();
+  });
+
+  it("renderiza una lista de soluciones (result_type: equation_solutions)", () => {
+    render(
+      <ResultPanel
+        result={{
+          ...baseResult,
+          operation: "solve_system",
+          result_type: "equation_solutions",
+          result_text: null,
+          result_latex: null,
+          result_approx: null,
+          result_data: [
+            { text: "x=3, y=2", latex: "x = 3,\\ y = 2", is_complex: false },
+          ],
+        }}
+        isLoading={false}
+      />,
+    );
+    // KaTeX descompone el LaTeX en múltiples <span>, así que se compara el
+    // texto renderizado sin espacios en vez de buscar la cadena literal.
+    const item = screen.getByRole("listitem");
+    expect(item.textContent?.replace(/\s+/g, "")).toContain("x=3,y=2");
+  });
+
+  it("sistema sin solución muestra el mensaje correspondiente, no un vacío", () => {
+    render(
+      <ResultPanel
+        result={{
+          ...baseResult,
+          operation: "solve_system",
+          result_type: "equation_solutions",
+          result_text: null,
+          result_latex: null,
+          result_approx: null,
+          result_data: [],
+          warnings: ["El sistema no tiene solución (inconsistente)."],
+        }}
+        isLoading={false}
+      />,
+    );
+    expect(screen.getByText("El sistema no tiene solución.")).toBeInTheDocument();
+  });
+
+  it("muestra la fracción exacta y el decimal juntos, sin que uno oculte al otro", () => {
+    render(
+      <ResultPanel
+        result={{ ...baseResult, result_text: "63/4", result_approx: 15.75 }}
+        isLoading={false}
+      />,
+    );
+    expect(screen.getByText("63/4")).toBeInTheDocument();
+    expect(screen.getByText("≈ 15.75")).toBeInTheDocument();
+  });
 });

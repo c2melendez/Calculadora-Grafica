@@ -7,6 +7,30 @@ vi.mock("../api/client", () => ({
   callApi: vi.fn(),
 }));
 
+// MathLive define un custom element (<math-field>) que jsdom no soporta
+// (no hay verdadero renderizado de fórmulas en un entorno de pruebas sin
+// navegador). Se sustituye por un <input> accesible equivalente — la
+// conversión LaTeX->ASCII real (`latexToBackendSyntax`) SÍ se prueba por
+// separado en NaturalMathField.test.ts con casos concretos.
+vi.mock("../components/NaturalMathField", () => ({
+  NaturalMathField: ({
+    latex,
+    onLatexChange,
+    ariaLabel,
+  }: {
+    latex: string;
+    onLatexChange: (v: string) => void;
+    ariaLabel: string;
+  }) => (
+    <input
+      aria-label={ariaLabel}
+      value={latex}
+      onChange={(e) => onLatexChange(e.target.value)}
+    />
+  ),
+  latexToBackendSyntax: (latex: string) => latex.trim(),
+}));
+
 import { callApi } from "../api/client";
 
 const mockedCallApi = vi.mocked(callApi);

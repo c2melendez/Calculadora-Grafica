@@ -7,6 +7,24 @@ vi.mock("../api/client", () => ({
   callApi: vi.fn(),
 }));
 
+// MathLive define un custom element (<math-field>) que jsdom no soporta.
+// La conversión LaTeX->ASCII real se prueba aparte, sin mocks, en
+// NaturalMathField.test.ts.
+vi.mock("../components/NaturalMathField", () => ({
+  NaturalMathField: ({
+    latex,
+    onLatexChange,
+    ariaLabel,
+  }: {
+    latex: string;
+    onLatexChange: (v: string) => void;
+    ariaLabel: string;
+  }) => (
+    <input aria-label={ariaLabel} value={latex} onChange={(e) => onLatexChange(e.target.value)} />
+  ),
+  latexToBackendSyntax: (latex: string) => latex.trim(),
+}));
+
 import { callApi } from "../api/client";
 
 const mockedCallApi = vi.mocked(callApi);
@@ -65,5 +83,37 @@ describe("EquationMode", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("no puede estar vacía");
     expect(mockedCallApi).not.toHaveBeenCalled();
+  });
+
+  it("detecta automáticamente una desigualdad y rutea a /inequality", async () => {
+    render(<EquationMode />);
+    fireEvent.change(screen.getByLabelText("Ecuación", { selector: "input" }), {
+      target: { value: "x+1>0" },
+    });
+    fireEvent.submit(screen.getByRole("button", { name: "Resolver" }).closest("form")!);
+
+    await waitFor(() => expect(mockedCallApi).toHaveBeenCalled());
+
+    expect(mockedCallApi).toHaveBeenCalledWith("/inequality", {
+      inequality: "x+1>0",
+    });
+  });
+
+  it("desigualdad con <= incluye la variable explícita cuando se indica", async () => {
+    render(<EquationMode />);
+    fireEvent.change(screen.getByLabelText("Ecuación", { selector: "input" }), {
+      target: { value: "x**2-4<=0" },
+    });
+    fireEvent.change(screen.getByLabelText("Variable a despejar (opcional)"), {
+      target: { value: "x" },
+    });
+    fireEvent.submit(screen.getByRole("button", { name: "Resolver" }).closest("form")!);
+
+    await waitFor(() => expect(mockedCallApi).toHaveBeenCalled());
+
+    expect(mockedCallApi).toHaveBeenCalledWith("/inequality", {
+      inequality: "x**2-4<=0",
+      variable: "x",
+    });
   });
 });

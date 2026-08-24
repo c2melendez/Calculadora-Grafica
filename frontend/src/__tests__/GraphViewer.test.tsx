@@ -63,4 +63,35 @@ describe("GraphViewer", () => {
       expect.objectContaining({ format: "png" }),
     );
   });
+
+  it("una superficie 3D usa layout con 'scene' (no xaxis/yaxis planos)", async () => {
+    const surfaceData: GraphData = {
+      traces: [
+        {
+          type: "surface",
+          name: "x**2+y**2",
+          x: [-1, 0, 1],
+          y: [-1, 0, 1],
+          z: [
+            [2, 1, 2],
+            [1, 0, 1],
+            [2, 1, 2],
+          ],
+        },
+      ],
+      x_range: [-1, 1],
+      y_range: [-1, 1],
+      points_truncated: false,
+    };
+
+    render(<GraphViewer data={surfaceData} />);
+    await waitFor(() => expect(newPlot).toHaveBeenCalledTimes(1));
+
+    const [, plotlyTraces, layout] = newPlot.mock.calls[0];
+    expect(plotlyTraces).toEqual([
+      expect.objectContaining({ type: "surface", z: surfaceData.traces[0].z }),
+    ]);
+    expect(layout).toHaveProperty("scene");
+    expect(layout).not.toHaveProperty("xaxis");
+  });
 });

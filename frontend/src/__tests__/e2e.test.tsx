@@ -22,6 +22,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../App";
 import { HISTORY_STORAGE_KEY, useHistoryStore } from "../store/useHistoryStore";
 
+// El modo Básico (montado por defecto al renderizar <App />) usa MathLive
+// (<math-field>), un custom element que jsdom no implementa. Se sustituye
+// por un <input> equivalente — este E2E ejercita el modo Derivada, no la
+// conversión LaTeX del modo Básico (esa se prueba aparte en
+// NaturalMathField.test.ts).
+vi.mock("../components/NaturalMathField", () => ({
+  NaturalMathField: ({
+    latex,
+    onLatexChange,
+    ariaLabel,
+  }: {
+    latex: string;
+    onLatexChange: (v: string) => void;
+    ariaLabel: string;
+  }) => (
+    <input aria-label={ariaLabel} value={latex} onChange={(e) => onLatexChange(e.target.value)} />
+  ),
+  latexToBackendSyntax: (latex: string) => latex.trim(),
+}));
+
 const DERIVATIVE_RESPONSE = {
   success: true,
   operation: "derivative",
