@@ -37,6 +37,8 @@ class OperationType(str, Enum):
     GRAPH_PARAMETRIC = "graph_parametric"
     DERIVATIVE_PARTIAL = "derivative_partial"
     DERIVATIVE_IMPLICIT = "derivative_implicit"
+    MATRIX_TRANSPOSE = "matrix_transpose"
+    MATRIX_POWER = "matrix_power"
 
 
 class MatrixOpKind(str, Enum):
@@ -127,11 +129,31 @@ class Trace(BaseModel):
     z: Optional[List[List[float]]] = None
 
 
+class GraphAnalysis(BaseModel):
+    """Análisis simbólico best-effort de una expresión graficada (dominio,
+    rango, interceptos, extremos locales, inflexión). Cada campo puede
+    quedar en `None`/`[]` si SymPy no pudo resolverlo dentro del
+    presupuesto de tiempo (ver `graph_service._run_with_timeout`) o si no
+    hay un método simbólico aplicable — nunca bloquea la graficación
+    numérica en sí, que sigue funcionando igual sin importar esto."""
+
+    domain_text: Optional[str] = None
+    domain_latex: Optional[str] = None
+    range_text: Optional[str] = None
+    range_latex: Optional[str] = None
+    y_intercept: Optional[str] = None
+    x_intercepts: List[str] = []
+    local_maxima: List[str] = []
+    local_minima: List[str] = []
+    inflection_points: List[str] = []
+
+
 class GraphData(BaseModel):
     traces: List[Trace]
     x_range: List[float]
     y_range: Optional[List[float]] = None
     points_truncated: bool = False
+    analysis: Optional[List[GraphAnalysis]] = None
 
 
 class MathResponse(BaseModel):

@@ -67,6 +67,16 @@ class MatrixSingleRequest(BaseModel):
     # /determinant y /inverse: validar cuadrada -> si no, DIMENSION_MISMATCH.
 
 
+class MatrixPowerRequest(BaseModel):
+    matrix: List[List[str]] = Field(..., min_length=1, max_length=6)
+    exponent: int = Field(..., ge=-10, le=10)
+    # Cuadrada obligatoria -> DIMENSION_MISMATCH si no. Exponente negativo
+    # requiere matriz invertible -> SINGULAR_MATRIX si no. Rango acotado
+    # (igual criterio que otros límites de complejidad, sección 7/9) para
+    # evitar entradas de tamaño explosivo (A**10 en una matriz 6x6 ya es
+    # bastante trabajo simbólico).
+
+
 class Graph2DRequest(BaseModel):
     expressions: List[str] = Field(..., min_length=1, max_length=5)
     variable: str = "x"
