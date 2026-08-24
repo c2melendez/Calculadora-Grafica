@@ -22,6 +22,8 @@ export const KNOWN_ENDPOINTS = [
   "/matrix/operations",
   "/matrix/determinant",
   "/matrix/inverse",
+  "/matrix/transpose",
+  "/matrix/power",
   "/graph/2d",
   // --- Fase 2 (passthrough trivial real o UNSUPPORTED_IN_PHASE_1) ---
   "/solve/system",

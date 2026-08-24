@@ -14,6 +14,8 @@ import type { components } from "../types/api";
 
 export type MathResponse = components["schemas"]["MathResponse"];
 export type OperationType = components["schemas"]["OperationType"];
+export type ResultType = components["schemas"]["ResultType"];
+export type EquationSolution = components["schemas"]["EquationSolution"];
 
 const REQUEST_TIMEOUT_MS = 15_000;
 
@@ -38,6 +40,8 @@ const ENDPOINT_TO_OPERATION: Record<KnownEndpoint, OperationType | null> = {
   "/matrix/operations": "matrix_operation",
   "/matrix/determinant": "matrix_determinant",
   "/matrix/inverse": "matrix_inverse",
+  "/matrix/transpose": "matrix_transpose",
+  "/matrix/power": "matrix_power",
   "/graph/2d": "graph_2d",
   "/solve/system": "solve_system",
   "/inequality": "inequality",
