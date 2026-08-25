@@ -1,5 +1,5 @@
 [project]
-name = "calculadora-cientifica-backend"
+name = "precision-lab-backend"
 version = "0.1.0"
 description = "Calculadora científica web con SymPy — backend FastAPI"
 requires-python = ">=3.11"
