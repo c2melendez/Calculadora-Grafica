@@ -1,29 +1,15 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap");
+@import "./design-tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background-color: #fbf9f4;
-}
-
-/* Animaciones sutiles (sección 11) — respeta prefers-reduced-motion. */
-@media (prefers-reduced-motion: no-preference) {
-  .fade-in {
-    animation: fade-in 150ms ease-out;
-  }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  font-family: theme("fontFamily.sans");
 }
