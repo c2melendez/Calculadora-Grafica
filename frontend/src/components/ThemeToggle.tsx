@@ -1,31 +1,46 @@
-/**
- * src/components/ThemeToggle.tsx — modo oscuro por defecto, persistido
- * (spec, sección 11).
- */
+import { useEffect, useState } from "react";
 
-import { useEffect } from "react";
+// Ciclo de 3 temas: dark → light → high-contrast → dark. Escribe
+// data-theme en <html> (leído por design-tokens.css) y lo persiste en
+// localStorage. Mismo componente para Precision Lab y Precision Lab Lite.
 
-import { useUIStore } from "../store/useUIStore";
+type Theme = "dark" | "light" | "high-contrast";
+const ORDER: Theme[] = ["dark", "light", "high-contrast"];
+const STORAGE_KEY = "precision-lab-theme";
+const LABELS: Record<Theme, string> = {
+  dark: "Oscuro",
+  light: "Claro",
+  "high-contrast": "Alto contraste",
+};
+
+function applyTheme(theme: Theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem(STORAGE_KEY, theme);
+}
 
 export function ThemeToggle() {
-  const theme = useUIStore((state) => state.theme);
-  const toggleTheme = useUIStore((state) => state.toggleTheme);
+  const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    const initial = stored && ORDER.includes(stored) ? stored : "dark";
+    setTheme(initial);
+    applyTheme(initial);
+  }, []);
 
-  const isDark = theme === "dark";
+  function cycle() {
+    const next = ORDER[(ORDER.indexOf(theme) + 1) % ORDER.length];
+    setTheme(next);
+    applyTheme(next);
+  }
 
   return (
     <button
-      type="button"
-      onClick={toggleTheme}
-      aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-      aria-pressed={isDark}
-      className="rounded-full border border-stone-300 px-3 py-1.5 text-sm text-stone-700 transition-colors hover:bg-stone-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+      onClick={cycle}
+      aria-label={`Tema: ${LABELS[theme]}. Cambiar tema.`}
+      className="rounded-md bg-chrome-soft px-2.5 py-1 text-xs font-medium text-bone hover:bg-chrome-soft/70"
     >
-      {isDark ? "Modo oscuro" : "Modo claro"}
+      {LABELS[theme]}
     </button>
   );
 }
