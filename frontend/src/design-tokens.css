@@ -1,0 +1,74 @@
+/**
+ * design-tokens.css — Precision Lab
+ *
+ * Tres temas activados por [data-theme] en <html>: "dark" (default),
+ * "light" y "high-contrast". El ThemeToggle escribe ese atributo y lo
+ * persiste en localStorage. Los valores son tripletas RGB (sin "#") para
+ * poder usar los modificadores de opacidad de Tailwind (bg-chrome-soft/70,
+ * etc.) vía rgb(var(--color-x) / <alpha-value>) en tailwind.config.js.
+ *
+ * Nota de accesibilidad (modo alto contraste): se colapsan marker/graph/alpha
+ * en un único acento amarillo saturado, siguiendo la práctica de no depender
+ * de distinciones de color entre sí en modo alto contraste — la distinción
+ * entre SHIFT/ALPHA/acciones pasa a hacerse por posición, etiqueta de texto
+ * y borde, no por matiz. `muted` desaparece (no hay grises intermedios).
+ */
+
+:root,
+[data-theme="dark"] {
+  --color-chrome: 20 23 28;
+  --color-chrome-soft: 31 35 43;
+  --color-paper: 247 243 234;
+  --color-paper-soft: 255 255 255;
+  --color-paper-line: 228 220 200;
+  --color-ink: 28 31 38;
+  --color-bone: 236 231 218;
+  --color-marker: 232 163 61;
+  --color-marker-soft: 251 239 218;
+  --color-marker-text: 138 90 14;
+  --color-graph: 62 124 116;
+  --color-graph-soft: 228 238 236;
+  --color-alpha: 155 127 214;
+  --color-alpha-soft: 36 28 51;
+  --color-muted: 138 131 113;
+}
+
+[data-theme="light"] {
+  --color-chrome: 222 215 195;
+  --color-chrome-soft: 210 201 175;
+  --color-paper: 255 255 255;
+  --color-paper-soft: 255 255 255;
+  --color-paper-line: 228 220 200;
+  --color-ink: 28 31 38;
+  --color-bone: 43 42 34;
+  --color-marker: 217 138 30;
+  --color-marker-soft: 243 228 198;
+  --color-marker-text: 138 90 14;
+  --color-graph: 62 124 116;
+  --color-graph-soft: 228 238 236;
+  --color-alpha: 107 79 160;
+  --color-alpha-soft: 231 223 245;
+  --color-muted: 111 105 88;
+}
+
+[data-theme="high-contrast"] {
+  --color-chrome: 0 0 0;
+  --color-chrome-soft: 0 0 0;
+  --color-paper: 255 255 255;
+  --color-paper-soft: 255 255 255;
+  --color-paper-line: 0 0 0;
+  --color-ink: 0 0 0;
+  --color-bone: 255 255 255;
+  --color-marker: 255 213 74;
+  --color-marker-soft: 255 213 74;
+  --color-marker-text: 0 0 0;
+  --color-graph: 255 213 74;
+  --color-graph-soft: 255 213 74;
+  --color-alpha: 255 213 74;
+  --color-alpha-soft: 0 0 0;
+  --color-muted: 0 0 0;
+}
+
+[data-theme="high-contrast"] * {
+  border-width: 2px !important;
+}
