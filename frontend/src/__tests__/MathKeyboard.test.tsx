@@ -22,10 +22,30 @@ describe("MathKeyboard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Insertar π" }));
     expect(value).toBe("pi");
 
+    // "sin" está directamente en la fila de trigonometría — ya no requiere
+    // cambiar de pestaña (el teclado tipo Casio con capas SHIFT/ALPHA
+    // reemplazó las pestañas Básico/Funciones).
     rerender(<MathKeyboard value={value} onChange={onChange} />);
-    fireEvent.click(screen.getByRole("tab", { name: "Funciones" }));
     fireEvent.click(screen.getByRole("button", { name: "Insertar sin" }));
     expect(value).toBe("pisin()");
+  });
+
+  it("SHIFT es de un solo disparo: aplica la variante shift a la siguiente tecla y luego se apaga", () => {
+    let value = "";
+    const onChange = (next: string) => {
+      value = next;
+    };
+    const { rerender } = render(<MathKeyboard value={value} onChange={onChange} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "SHIFT" }));
+    fireEvent.click(screen.getByRole("button", { name: "Insertar x²" }));
+    expect(value).toBe("sqrt()");
+
+    // Tras usarse, SHIFT se desactiva solo: la siguiente tecla vuelve a su
+    // función normal (x², no √).
+    rerender(<MathKeyboard value={value} onChange={onChange} />);
+    fireEvent.click(screen.getByRole("button", { name: "Insertar x²" }));
+    expect(value).toBe("sqrt()**2");
   });
 
   it("muestra la vista previa cuando el valor inicial ya tiene contenido", () => {
