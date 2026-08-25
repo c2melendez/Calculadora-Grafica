@@ -8,6 +8,11 @@
  * (implicit_multiplication_application + convert_xor, sección 5) antes de
  * llamarlo. Ver `latexToBackendSyntax` para los ajustes puntuales sobre lo
  * que produce `convertLatexToAsciiMath` por defecto.
+ *
+ * Re-vestido con los tokens Precision Lab (Fase 1/2): el campo vive sobre
+ * el panel "paper", así que usa paper-soft/paper-line/ink, con el caret y
+ * el resaltado de selección de MathLive en marker (vía sus custom
+ * properties --caret-color / --selection-background-color).
  */
 
 import "mathlive";
@@ -100,16 +105,16 @@ export function NaturalMathField({
       math-virtual-keyboard-policy="manual"
       aria-label={ariaLabel}
       placeholder={placeholder}
-      style={{
-        display: "block",
-        width: "100%",
-        borderRadius: "9999px",
-        border: "1px solid #d6d3d1",
-        backgroundColor: "white",
-        padding: "0.65rem 3.25rem 0.65rem 1.25rem",
-        fontSize: "1.05rem",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-      }}
+      className="w-full rounded-full border border-paper-line bg-paper-soft px-5 py-2.5 text-base text-ink shadow-sm"
+      style={
+        {
+          display: "block",
+          width: "100%",
+          "--caret-color": "#E8A33D",
+          "--selection-background-color": "#FBEFDA",
+          "--selection-color": "#8A5A0E",
+        } as React.CSSProperties
+      }
     />
   );
 }
