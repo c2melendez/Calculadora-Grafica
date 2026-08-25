@@ -4,6 +4,10 @@
  * plantillas usan `#0`/`#1` como marcadores de posición — MathLive mueve
  * el cursor automáticamente ahí (igual que el botón √ o sin() en
  * GeoGebra/Google: crean la "caja" vacía lista para escribir dentro).
+ *
+ * Mismo patrón visual que el resto de Precision Lab: capas SHIFT/ALPHA de
+ * un solo disparo (tokens chrome/marker/alpha), en vez de las pestañas
+ * Básico/Funciones anteriores.
  */
 
 import type { MathfieldElement } from "mathlive";
@@ -12,64 +16,33 @@ import { useState } from "react";
 interface KeyDef {
   label: string;
   latex: string;
+  shiftLabel?: string;
+  shiftLatex?: string;
+  alphaLabel?: string;
+  alphaLatex?: string;
 }
 
-const FUNCTION_TABS: { id: string; label: string; keys: KeyDef[] }[] = [
-  {
-    id: "basico",
-    label: "Básico",
-    keys: [
-      { label: "x²", latex: "^{2}" },
-      { label: "xʸ", latex: "^{#0}" },
-      { label: "√", latex: "\\sqrt{#0}" },
-      { label: "|x|", latex: "\\left|#0\\right|" },
-      { label: "π", latex: "\\pi" },
-      { label: "e", latex: "e" },
-      { label: "∞", latex: "\\infty" },
-      { label: "i", latex: "i" },
-    ],
-  },
-  {
-    id: "funciones",
-    label: "Funciones",
-    keys: [
-      { label: "sin", latex: "\\sin\\left(#0\\right)" },
-      { label: "cos", latex: "\\cos\\left(#0\\right)" },
-      { label: "tan", latex: "\\tan\\left(#0\\right)" },
-      { label: "log", latex: "\\log\\left(#0\\right)" },
-      { label: "ln", latex: "\\ln\\left(#0\\right)" },
-      { label: "exp", latex: "e^{#0}" },
-      { label: "(", latex: "(" },
-      { label: ")", latex: ")" },
-    ],
-  },
+const STRUCT_KEYS: KeyDef[] = [
+  { label: "(", latex: "(", alphaLabel: "|x|", alphaLatex: "\\left|#0\\right|" },
+  { label: ")", latex: ")", alphaLabel: "i", alphaLatex: "i" },
+  { label: "x²", latex: "^{2}", shiftLabel: "√", shiftLatex: "\\sqrt{#0}" },
+  { label: "xʸ", latex: "^{#0}", shiftLabel: "ⁿ√", shiftLatex: "\\sqrt[#0]{#1}" },
+  { label: "π", latex: "\\pi", shiftLabel: "e", shiftLatex: "e" },
+];
+
+const TRIG_KEYS: KeyDef[] = [
+  { label: "sin", latex: "\\sin\\left(#0\\right)", shiftLabel: "sin⁻¹", shiftLatex: "\\sin^{-1}\\left(#0\\right)", alphaLabel: "x", alphaLatex: "x" },
+  { label: "cos", latex: "\\cos\\left(#0\\right)", shiftLabel: "cos⁻¹", shiftLatex: "\\cos^{-1}\\left(#0\\right)", alphaLabel: "y", alphaLatex: "y" },
+  { label: "tan", latex: "\\tan\\left(#0\\right)", shiftLabel: "tan⁻¹", shiftLatex: "\\tan^{-1}\\left(#0\\right)", alphaLabel: "z", alphaLatex: "z" },
+  { label: "ln", latex: "\\ln\\left(#0\\right)", shiftLabel: "eˣ", shiftLatex: "e^{#0}", alphaLabel: "n", alphaLatex: "n" },
+  { label: "log", latex: "\\log\\left(#0\\right)", shiftLabel: "∞", shiftLatex: "\\infty", alphaLabel: "t", alphaLatex: "t" },
 ];
 
 const NUMPAD: KeyDef[][] = [
-  [
-    { label: "7", latex: "7" },
-    { label: "8", latex: "8" },
-    { label: "9", latex: "9" },
-    { label: "÷", latex: "/" },
-  ],
-  [
-    { label: "4", latex: "4" },
-    { label: "5", latex: "5" },
-    { label: "6", latex: "6" },
-    { label: "×", latex: "\\times" },
-  ],
-  [
-    { label: "1", latex: "1" },
-    { label: "2", latex: "2" },
-    { label: "3", latex: "3" },
-    { label: "−", latex: "-" },
-  ],
-  [
-    { label: "0", latex: "0" },
-    { label: ".", latex: "." },
-    { label: "=", latex: "=" },
-    { label: "+", latex: "+" },
-  ],
+  [{ label: "7", latex: "7" }, { label: "8", latex: "8" }, { label: "9", latex: "9" }, { label: "÷", latex: "/" }],
+  [{ label: "4", latex: "4" }, { label: "5", latex: "5" }, { label: "6", latex: "6" }, { label: "×", latex: "\\times" }],
+  [{ label: "1", latex: "1" }, { label: "2", latex: "2" }, { label: "3", latex: "3" }, { label: "−", latex: "-" }],
+  [{ label: "0", latex: "0" }, { label: ".", latex: "." }, { label: "=", latex: "=" }, { label: "+", latex: "+" }],
 ];
 
 interface NaturalMathKeyboardProps {
@@ -78,12 +51,22 @@ interface NaturalMathKeyboardProps {
 }
 
 export function NaturalMathKeyboard({ field, onSubmit }: NaturalMathKeyboardProps) {
-  const [activeTab, setActiveTab] = useState(FUNCTION_TABS[0].id);
-  const activeKeys = FUNCTION_TABS.find((tab) => tab.id === activeTab)?.keys ?? [];
+  const [modifier, setModifier] = useState<"shift" | "alpha" | null>(null);
 
-  function press(latex: string): void {
+  function press(key: KeyDef): void {
+    const latex =
+      modifier === "shift" && key.shiftLatex
+        ? key.shiftLatex
+        : modifier === "alpha" && key.alphaLatex
+          ? key.alphaLatex
+          : key.latex;
     field?.focus();
     field?.insert(latex);
+    setModifier(null);
+  }
+
+  function toggleModifier(m: "shift" | "alpha"): void {
+    setModifier((cur) => (cur === m ? null : m));
   }
 
   function backspace(): void {
@@ -96,92 +79,114 @@ export function NaturalMathKeyboard({ field, onSubmit }: NaturalMathKeyboardProp
     field?.setValue("");
   }
 
-  const keyBase =
-    "flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500";
-  const funcKeyClass = `${keyBase} h-9 border border-stone-200 bg-white text-stone-700 hover:bg-stone-50`;
-  const numKeyClass = `${keyBase} h-9 bg-stone-100 text-stone-900 hover:bg-stone-200`;
-  const opKeyClass = `${keyBase} h-9 border border-stone-200 bg-white text-blue-600 hover:bg-stone-50`;
-
   return (
-    <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-      <div className="mb-2 flex items-center justify-between">
-        <div className="flex gap-1" role="tablist" aria-label="Grupos de funciones">
-          {FUNCTION_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`rounded px-2.5 py-1 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
-                activeTab === tab.id ? "bg-blue-600 text-white" : "text-stone-500 hover:bg-stone-100"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={clearAll}
-          className="text-xs font-medium text-stone-400 hover:text-stone-600"
-        >
-          Borrar todo
-        </button>
+    <div className="rounded-lg bg-chrome p-3">
+      <div className="mb-1.5 grid grid-cols-5 gap-1.5">
+        <ModKey label="SHIFT" active={modifier === "shift"} tone="marker" onClick={() => toggleModifier("shift")} />
+        <ModKey label="ALPHA" active={modifier === "alpha"} tone="alpha" onClick={() => toggleModifier("alpha")} />
+        <Key label="⌫" onClick={backspace} />
+        <Key label="AC" tone="marker" onClick={clearAll} />
+        <Key label="=" tone="graph" onClick={() => onSubmit?.()} />
       </div>
 
-      <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-8">
-        <div className="col-span-4 grid grid-cols-4 gap-1.5">
-          {activeKeys.map((key) => (
-            <button
-              key={key.label}
-              type="button"
-              onClick={() => press(key.latex)}
-              aria-label={`Insertar ${key.label}`}
-              className={funcKeyClass}
-            >
-              {key.label}
-            </button>
-          ))}
-        </div>
+      <KeyRow keys={STRUCT_KEYS} modifier={modifier} onPress={press} />
+      <KeyRow keys={TRIG_KEYS} modifier={modifier} onPress={press} />
 
-        <div className="col-span-4 grid grid-cols-4 gap-1.5">
-          {NUMPAD.flat().map((key, index) => (
-            <button
-              key={`${key.label}-${index}`}
-              type="button"
-              onClick={() => press(key.latex)}
-              aria-label={
-                key.label === "÷" || key.label === "×" || key.label === "−" || key.label === "="
-                  ? `Operador ${key.label}`
-                  : key.label
-              }
-              className={/[0-9.]/.test(key.label) ? numKeyClass : opKeyClass}
-            >
-              {key.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-1.5 grid grid-cols-4 gap-1.5 sm:grid-cols-8">
-        <button
-          type="button"
-          onClick={backspace}
-          aria-label="Borrar último carácter"
-          className={`${keyBase} col-span-2 h-9 bg-stone-800 text-white hover:bg-stone-700 sm:col-span-4`}
-        >
-          ⌫
-        </button>
-        <button
-          type="button"
-          onClick={() => onSubmit?.()}
-          aria-label="Calcular"
-          className={`${keyBase} col-span-2 h-9 bg-blue-600 text-white hover:bg-blue-500 sm:col-span-4`}
-        >
-          =
-        </button>
+      <div className="grid grid-cols-4 gap-1.5">
+        {NUMPAD.flat().map((key, index) => (
+          <button
+            key={`${key.label}-${index}`}
+            type="button"
+            onClick={() => press(key)}
+            aria-label={key.label === "÷" || key.label === "×" || key.label === "−" ? `Operador ${key.label}` : key.label}
+            className={
+              /[0-9.,]/.test(key.label)
+                ? "rounded-md bg-chrome-soft/80 py-2 text-base font-medium text-bone hover:bg-chrome-soft/60"
+                : "rounded-md bg-chrome-soft py-2 text-sm font-medium text-graph hover:bg-chrome-soft/70"
+            }
+          >
+            {key.label}
+          </button>
+        ))}
       </div>
     </div>
+  );
+}
+
+function KeyRow({
+  keys,
+  modifier,
+  onPress,
+}: {
+  keys: KeyDef[];
+  modifier: "shift" | "alpha" | null;
+  onPress: (key: KeyDef) => void;
+}) {
+  return (
+    <div className="mb-1.5 grid grid-cols-5 gap-1.5">
+      {keys.map((k) => {
+        const subLabel = modifier === "shift" ? k.shiftLabel : modifier === "alpha" ? k.alphaLabel : undefined;
+        return (
+          <div key={k.label} className="text-center">
+            <div
+              className={`mb-0.5 h-2.5 text-[8px] leading-none ${
+                subLabel ? (modifier === "shift" ? "text-marker" : "text-alpha") : "text-transparent"
+              }`}
+            >
+              {subLabel ?? "·"}
+            </div>
+            <button
+              type="button"
+              onClick={() => onPress(k)}
+              aria-label={`Insertar ${k.label}`}
+              className="w-full rounded-md bg-chrome-soft py-2 text-sm text-bone hover:bg-chrome-soft/70"
+            >
+              {k.label}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Key({ label, onClick, tone }: { label: string; onClick: () => void; tone?: "marker" | "graph" }) {
+  const toneClass = tone === "marker" ? "text-marker" : tone === "graph" ? "text-graph" : "text-bone";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full rounded-md bg-chrome-soft py-2 text-sm font-medium hover:bg-chrome-soft/70 ${toneClass}`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function ModKey({
+  label,
+  active,
+  tone,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  tone: "marker" | "alpha";
+  onClick: () => void;
+}) {
+  const toneMap = {
+    marker: { bg: "bg-marker-soft", text: "text-marker-text", idle: "text-marker" },
+    alpha: { bg: "bg-alpha-soft", text: "text-alpha", idle: "text-alpha" },
+  }[tone];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full rounded-md py-2 text-[11px] font-semibold ${
+        active ? `${toneMap.bg} ${toneMap.text}` : `bg-chrome-soft ${toneMap.idle}`
+      }`}
+    >
+      {label}
+    </button>
   );
 }
