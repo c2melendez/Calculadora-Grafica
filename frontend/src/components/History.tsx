@@ -39,18 +39,18 @@ export function History() {
   }
 
   if (entries.length === 0) {
-    return <p className="text-sm text-stone-400">Todavía no hay historial en esta sesión.</p>;
+    return <p className="text-sm text-muted">Todavía no hay historial en esta sesión.</p>;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-stone-600">Historial</h2>
+        <h2 className="text-sm font-medium text-muted">Historial</h2>
         <button
           type="button"
           onClick={clearHistory}
           aria-label="Borrar historial"
-          className="text-xs text-stone-400 hover:text-stone-800"
+          className="text-xs text-muted hover:text-ink"
         >
           Borrar historial
         </button>
@@ -60,17 +60,17 @@ export function History() {
         {entries.map((entry: HistoryEntry) => (
           <li
             key={entry.id}
-            className="flex items-center justify-between rounded border border-stone-200 bg-stone-50 px-3 py-2"
+            className="flex items-center justify-between rounded border border-paper-line bg-paper px-3 py-2"
           >
             <div>
-              <p className="text-sm text-stone-800">{entry.label}</p>
-              <p className="text-xs text-stone-400">{entry.operation}</p>
+              <p className="text-sm text-ink">{entry.label}</p>
+              <p className="text-xs text-muted">{entry.operation}</p>
             </div>
             <button
               type="button"
               onClick={() => handleReuse(entry.id)}
               aria-label={`Reusar entrada: ${entry.label}`}
-              className="rounded border border-stone-300 px-2 py-1 text-xs text-stone-600 hover:bg-stone-100"
+              className="rounded border border-paper-line px-2 py-1 text-xs text-muted hover:bg-paper-line/40"
             >
               Reusar
             </button>
@@ -85,7 +85,7 @@ export function History() {
       )}
 
       {(isReusing || reusedResult) && (
-        <div className="border-t border-stone-200 pt-4">
+        <div className="border-t border-paper-line pt-4">
           <ResultPanel result={reusedResult} isLoading={isReusing} />
         </div>
       )}

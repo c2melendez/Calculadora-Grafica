@@ -35,36 +35,36 @@ function AnalysisPanel({ result }: { result: MathResponse }) {
   return (
     <div className="space-y-3">
       {result.graph_data.analysis.map((analysis, index) => (
-        <div key={index} className="rounded border border-stone-200 bg-stone-50 p-3 text-sm">
-          <p className="mb-2 font-medium text-stone-700">
+        <div key={index} className="rounded border border-paper-line bg-paper p-3 text-sm">
+          <p className="mb-2 font-medium text-ink">
             {result.graph_data!.traces[index]?.name ?? `Expresión ${index + 1}`}
           </p>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-stone-600 sm:grid-cols-3">
-            <dt className="text-stone-400">Dominio</dt>
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted sm:grid-cols-3">
+            <dt className="text-muted">Dominio</dt>
             <dd className="col-span-1 sm:col-span-2">{analysis.domain_text ?? "—"}</dd>
-            <dt className="text-stone-400">Rango</dt>
+            <dt className="text-muted">Rango</dt>
             <dd className="col-span-1 sm:col-span-2">{analysis.range_text ?? "—"}</dd>
-            <dt className="text-stone-400">Corte en y</dt>
+            <dt className="text-muted">Corte en y</dt>
             <dd className="col-span-1 sm:col-span-2">{analysis.y_intercept ?? "—"}</dd>
-            <dt className="text-stone-400">Cortes en x</dt>
+            <dt className="text-muted">Cortes en x</dt>
             <dd className="col-span-1 sm:col-span-2">
               {analysis.x_intercepts && analysis.x_intercepts.length > 0
                 ? analysis.x_intercepts.join(", ")
                 : "—"}
             </dd>
-            <dt className="text-stone-400">Máximos locales</dt>
+            <dt className="text-muted">Máximos locales</dt>
             <dd className="col-span-1 sm:col-span-2">
               {analysis.local_maxima && analysis.local_maxima.length > 0
                 ? analysis.local_maxima.join(", ")
                 : "—"}
             </dd>
-            <dt className="text-stone-400">Mínimos locales</dt>
+            <dt className="text-muted">Mínimos locales</dt>
             <dd className="col-span-1 sm:col-span-2">
               {analysis.local_minima && analysis.local_minima.length > 0
                 ? analysis.local_minima.join(", ")
                 : "—"}
             </dd>
-            <dt className="text-stone-400">Puntos de inflexión</dt>
+            <dt className="text-muted">Puntos de inflexión</dt>
             <dd className="col-span-1 sm:col-span-2">
               {analysis.inflection_points && analysis.inflection_points.length > 0
                 ? analysis.inflection_points.join(", ")
@@ -81,7 +81,7 @@ function ResultArea({ result, isLoading }: { result: MathResponse | null; isLoad
   if (!isLoading && result?.success && result.graph_data) {
     return (
       <div className="space-y-4">
-        <Suspense fallback={<p className="text-sm text-stone-400">Cargando visor de gráficas…</p>}>
+        <Suspense fallback={<p className="text-sm text-muted">Cargando visor de gráficas…</p>}>
           <GraphViewer data={result.graph_data} />
         </Suspense>
         <AnalysisPanel result={result} />
@@ -166,7 +166,7 @@ function Graph2DForm() {
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <span className="block text-sm text-stone-600">Expresiones (hasta {MAX_EXPRESSIONS})</span>
+        <span className="block text-sm text-muted">Expresiones (hasta {MAX_EXPRESSIONS})</span>
         {latexRows.map((row, index) => (
           <div key={index} className="flex items-center gap-2">
             <div className="flex-1">
@@ -185,7 +185,7 @@ function Graph2DForm() {
                 type="button"
                 onClick={() => removeExpressionField(index)}
                 aria-label={`Eliminar expresión ${index + 1}`}
-                className="text-sm text-stone-400 hover:text-stone-800"
+                className="text-sm text-muted hover:text-ink"
               >
                 ✕
               </button>
@@ -196,7 +196,7 @@ function Graph2DForm() {
           <button
             type="button"
             onClick={addExpressionField}
-            className="text-sm text-blue-600 hover:text-blue-500"
+            className="text-sm text-marker hover:text-marker-text"
           >
             + Añadir expresión
           </button>
@@ -206,7 +206,7 @@ function Graph2DForm() {
       <div className="space-y-1">
         {latexRows.length > 1 && (
           <div className="flex flex-wrap gap-1">
-            <span className="pt-1 text-xs font-medium text-stone-400">Teclado para:</span>
+            <span className="pt-1 text-xs font-medium text-muted">Teclado para:</span>
             {latexRows.map((_, index) => (
               <button
                 key={index}
@@ -215,8 +215,8 @@ function Graph2DForm() {
                 aria-pressed={activeRow === index}
                 className={`rounded px-2 py-1 text-xs ${
                   activeRow === index
-                    ? "bg-blue-600 text-white"
-                    : "border border-stone-200 text-stone-500 hover:bg-stone-50"
+                    ? "bg-graph text-white"
+                    : "border border-paper-line text-muted hover:bg-paper"
                 }`}
               >
                 #{index + 1}
@@ -232,7 +232,7 @@ function Graph2DForm() {
 
       <div className="flex flex-wrap gap-4">
         <div className="space-y-1">
-          <label htmlFor="graph-variable" className="block text-sm text-stone-600">
+          <label htmlFor="graph-variable" className="block text-sm text-muted">
             Variable
           </label>
           <input
@@ -240,11 +240,11 @@ function Graph2DForm() {
             type="text"
             value={variable}
             onChange={(e) => setVariable(e.target.value)}
-            className="w-20 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-20 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph-x-min" className="block text-sm text-stone-600">
+          <label htmlFor="graph-x-min" className="block text-sm text-muted">
             x mínimo (opcional)
           </label>
           <input
@@ -252,11 +252,11 @@ function Graph2DForm() {
             type="text"
             value={xMin}
             onChange={(e) => setXMin(e.target.value)}
-            className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph-x-max" className="block text-sm text-stone-600">
+          <label htmlFor="graph-x-max" className="block text-sm text-muted">
             x máximo (opcional)
           </label>
           <input
@@ -264,11 +264,11 @@ function Graph2DForm() {
             type="text"
             value={xMax}
             onChange={(e) => setXMax(e.target.value)}
-            className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph-samples" className="block text-sm text-stone-600">
+          <label htmlFor="graph-samples" className="block text-sm text-muted">
             Muestras (opcional)
           </label>
           <input
@@ -276,18 +276,18 @@ function Graph2DForm() {
             type="text"
             value={samples}
             onChange={(e) => setSamples(e.target.value)}
-            className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph-angle-unit" className="block text-sm text-stone-600">
+          <label htmlFor="graph-angle-unit" className="block text-sm text-muted">
             Unidad angular
           </label>
           <select
             id="graph-angle-unit"
             value={angleUnit}
             onChange={(e) => setAngleUnit(e.target.value as "rad" | "deg")}
-            className="rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           >
             <option value="rad">Radianes</option>
             <option value="deg">Grados</option>
@@ -303,12 +303,12 @@ function Graph2DForm() {
 
       <button
         type="submit"
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+        className="rounded bg-graph px-4 py-2 text-sm font-medium text-white hover:bg-graph/90"
       >
         Graficar
       </button>
 
-      <div className="border-t border-stone-200 pt-4">
+      <div className="border-t border-paper-line pt-4">
         <ResultArea result={lastResult} isLoading={isLoading} />
       </div>
     </form>
@@ -383,7 +383,7 @@ function Graph3DForm() {
 
       <div className="flex flex-wrap gap-4">
         <div className="space-y-1">
-          <label htmlFor="graph3d-xvar" className="block text-sm text-stone-600">
+          <label htmlFor="graph3d-xvar" className="block text-sm text-muted">
             Variable x
           </label>
           <input
@@ -391,11 +391,11 @@ function Graph3DForm() {
             type="text"
             value={xVar}
             onChange={(e) => setXVar(e.target.value)}
-            className="w-16 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-16 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph3d-yvar" className="block text-sm text-stone-600">
+          <label htmlFor="graph3d-yvar" className="block text-sm text-muted">
             Variable y
           </label>
           <input
@@ -403,11 +403,11 @@ function Graph3DForm() {
             type="text"
             value={yVar}
             onChange={(e) => setYVar(e.target.value)}
-            className="w-16 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-16 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph3d-xmin" className="block text-sm text-stone-600">
+          <label htmlFor="graph3d-xmin" className="block text-sm text-muted">
             x mínimo
           </label>
           <input
@@ -415,11 +415,11 @@ function Graph3DForm() {
             type="text"
             value={xMin}
             onChange={(e) => setXMin(e.target.value)}
-            className="w-20 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-20 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph3d-xmax" className="block text-sm text-stone-600">
+          <label htmlFor="graph3d-xmax" className="block text-sm text-muted">
             x máximo
           </label>
           <input
@@ -427,11 +427,11 @@ function Graph3DForm() {
             type="text"
             value={xMax}
             onChange={(e) => setXMax(e.target.value)}
-            className="w-20 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-20 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph3d-ymin" className="block text-sm text-stone-600">
+          <label htmlFor="graph3d-ymin" className="block text-sm text-muted">
             y mínimo
           </label>
           <input
@@ -439,11 +439,11 @@ function Graph3DForm() {
             type="text"
             value={yMin}
             onChange={(e) => setYMin(e.target.value)}
-            className="w-20 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-20 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="graph3d-ymax" className="block text-sm text-stone-600">
+          <label htmlFor="graph3d-ymax" className="block text-sm text-muted">
             y máximo
           </label>
           <input
@@ -451,7 +451,7 @@ function Graph3DForm() {
             type="text"
             value={yMax}
             onChange={(e) => setYMax(e.target.value)}
-            className="w-20 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-20 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
       </div>
@@ -464,12 +464,12 @@ function Graph3DForm() {
 
       <button
         type="submit"
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+        className="rounded bg-graph px-4 py-2 text-sm font-medium text-white hover:bg-graph/90"
       >
         Graficar superficie
       </button>
 
-      <div className="border-t border-stone-200 pt-4">
+      <div className="border-t border-paper-line pt-4">
         <ResultArea result={lastResult} isLoading={isLoading} />
       </div>
     </form>
@@ -535,7 +535,7 @@ function GraphParametricForm() {
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1">
-        <span className="block text-sm text-stone-600">x(t)</span>
+        <span className="block text-sm text-muted">x(t)</span>
         <NaturalMathField
           latex={xLatex}
           onLatexChange={setXLatex}
@@ -545,7 +545,7 @@ function GraphParametricForm() {
         />
       </div>
       <div className="space-y-1">
-        <span className="block text-sm text-stone-600">y(t)</span>
+        <span className="block text-sm text-muted">y(t)</span>
         <NaturalMathField
           latex={yLatex}
           onLatexChange={setYLatex}
@@ -563,8 +563,8 @@ function GraphParametricForm() {
             aria-pressed={activeField === "x"}
             className={`rounded px-2 py-1 text-xs ${
               activeField === "x"
-                ? "bg-blue-600 text-white"
-                : "border border-stone-200 text-stone-500 hover:bg-stone-50"
+                ? "bg-graph text-white"
+                : "border border-paper-line text-muted hover:bg-paper"
             }`}
           >
             Teclado para x(t)
@@ -575,8 +575,8 @@ function GraphParametricForm() {
             aria-pressed={activeField === "y"}
             className={`rounded px-2 py-1 text-xs ${
               activeField === "y"
-                ? "bg-blue-600 text-white"
-                : "border border-stone-200 text-stone-500 hover:bg-stone-50"
+                ? "bg-graph text-white"
+                : "border border-paper-line text-muted hover:bg-paper"
             }`}
           >
             Teclado para y(t)
@@ -590,7 +590,7 @@ function GraphParametricForm() {
 
       <div className="flex flex-wrap gap-4">
         <div className="space-y-1">
-          <label htmlFor="param-parameter" className="block text-sm text-stone-600">
+          <label htmlFor="param-parameter" className="block text-sm text-muted">
             Parámetro
           </label>
           <input
@@ -598,11 +598,11 @@ function GraphParametricForm() {
             type="text"
             value={parameter}
             onChange={(e) => setParameter(e.target.value)}
-            className="w-16 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-16 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="param-tmin" className="block text-sm text-stone-600">
+          <label htmlFor="param-tmin" className="block text-sm text-muted">
             t mínimo
           </label>
           <input
@@ -610,11 +610,11 @@ function GraphParametricForm() {
             type="text"
             value={tMin}
             onChange={(e) => setTMin(e.target.value)}
-            className="w-28 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-28 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="param-tmax" className="block text-sm text-stone-600">
+          <label htmlFor="param-tmax" className="block text-sm text-muted">
             t máximo
           </label>
           <input
@@ -622,7 +622,7 @@ function GraphParametricForm() {
             type="text"
             value={tMax}
             onChange={(e) => setTMax(e.target.value)}
-            className="w-28 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-28 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
       </div>
@@ -635,12 +635,12 @@ function GraphParametricForm() {
 
       <button
         type="submit"
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+        className="rounded bg-graph px-4 py-2 text-sm font-medium text-white hover:bg-graph/90"
       >
         Graficar curva
       </button>
 
-      <div className="border-t border-stone-200 pt-4">
+      <div className="border-t border-paper-line pt-4">
         <ResultArea result={lastResult} isLoading={isLoading} />
       </div>
     </form>
@@ -651,9 +651,9 @@ export function GraphMode() {
   const [kind, setKind] = useState<GraphKind>("2d");
 
   return (
-    <div className="space-y-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+    <div className="space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-stone-600">Gráficas</h2>
+        <h2 className="text-sm font-medium text-muted">Gráficas</h2>
         <div className="flex gap-1" role="tablist" aria-label="Tipo de gráfica">
           {(Object.keys(GRAPH_KIND_LABELS) as GraphKind[]).map((k) => (
             <button
@@ -663,7 +663,7 @@ export function GraphMode() {
               aria-selected={kind === k}
               onClick={() => setKind(k)}
               className={`rounded px-3 py-1 text-xs font-medium ${
-                kind === k ? "bg-blue-600 text-white" : "text-stone-500 hover:bg-stone-100"
+                kind === k ? "bg-graph text-white" : "text-muted hover:bg-paper-line/40"
               }`}
             >
               {GRAPH_KIND_LABELS[k]}

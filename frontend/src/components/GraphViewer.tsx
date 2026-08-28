@@ -91,7 +91,7 @@ export default function GraphViewer({ data }: GraphViewerProps) {
                   zaxis: { title: "z" },
                 },
                 paper_bgcolor: "transparent",
-                font: { color: "#44403c" },
+                font: { color: "#1C1F26" },
                 margin: { t: 20, r: 20, b: 20, l: 20 },
               }
             : {
@@ -99,7 +99,7 @@ export default function GraphViewer({ data }: GraphViewerProps) {
                 yaxis: data.y_range ? { range: data.y_range } : {},
                 paper_bgcolor: "transparent",
                 plot_bgcolor: "transparent",
-                font: { color: "#44403c" },
+                font: { color: "#1C1F26" },
                 margin: { t: 20, r: 20, b: 40, l: 50 },
               },
           { responsive: true, displaylogo: false },
@@ -157,14 +157,14 @@ export default function GraphViewer({ data }: GraphViewerProps) {
         ref={containerRef}
         role="img"
         aria-label="Gráfica de las expresiones ingresadas"
-        className="h-96 w-full rounded border border-stone-200"
+        className="h-96 w-full rounded border border-paper-line"
       />
       <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={handleDownloadPng}
           aria-label="Descargar gráfica como PNG"
-          className="rounded border border-stone-300 px-3 py-1 text-xs text-stone-600 hover:bg-stone-100"
+          className="rounded border border-paper-line px-3 py-1 text-xs text-muted hover:bg-paper-line/40"
         >
           Descargar PNG
         </button>

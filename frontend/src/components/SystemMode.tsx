@@ -99,14 +99,14 @@ export function SystemMode() {
       ref={formRef}
       onSubmit={handleSubmit}
       aria-labelledby="system-mode-heading"
-      className="space-y-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm"
+      className="space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm"
     >
-      <h2 id="system-mode-heading" className="text-sm font-medium text-stone-600">
+      <h2 id="system-mode-heading" className="text-sm font-medium text-muted">
         Sistema de ecuaciones
       </h2>
 
       <div className="space-y-2">
-        <span className="block text-sm text-stone-600">Ecuaciones</span>
+        <span className="block text-sm text-muted">Ecuaciones</span>
         {latexRows.map((row, index) => (
           <div key={index} className="flex items-center gap-2">
             <div className="flex-1">
@@ -125,7 +125,7 @@ export function SystemMode() {
                 type="button"
                 onClick={() => removeRow(index)}
                 aria-label={`Eliminar ecuación ${index + 1}`}
-                className="text-sm text-stone-400 hover:text-stone-800"
+                className="text-sm text-muted hover:text-ink"
               >
                 ✕
               </button>
@@ -136,7 +136,7 @@ export function SystemMode() {
           <button
             type="button"
             onClick={addRow}
-            className="text-sm text-blue-600 hover:text-blue-500"
+            className="text-sm text-marker hover:text-marker-text"
           >
             + Añadir ecuación
           </button>
@@ -144,7 +144,7 @@ export function SystemMode() {
       </div>
 
       <div className="space-y-1">
-        <span className="block text-xs font-medium text-stone-400">
+        <span className="block text-xs font-medium text-muted">
           Teclado para la ecuación seleccionada:
         </span>
         <div className="flex flex-wrap gap-1">
@@ -156,8 +156,8 @@ export function SystemMode() {
               aria-pressed={activeRow === index}
               className={`rounded px-2 py-1 text-xs ${
                 activeRow === index
-                  ? "bg-blue-600 text-white"
-                  : "border border-stone-200 text-stone-500 hover:bg-stone-50"
+                  ? "bg-graph text-white"
+                  : "border border-paper-line text-muted hover:bg-paper"
               }`}
             >
               #{index + 1}
@@ -171,7 +171,7 @@ export function SystemMode() {
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="system-variables" className="block text-sm text-stone-600">
+        <label htmlFor="system-variables" className="block text-sm text-muted">
           Variables (separadas por coma, en el mismo orden que se resolverán)
         </label>
         <input
@@ -179,7 +179,7 @@ export function SystemMode() {
           type="text"
           value={variables}
           onChange={(e) => setVariables(e.target.value)}
-          className="w-full rounded border border-stone-300 bg-white px-3 py-2 text-sm"
+          className="w-full rounded border border-paper-line bg-paper-soft px-3 py-2 text-sm"
         />
       </div>
 
@@ -191,12 +191,12 @@ export function SystemMode() {
 
       <button
         type="submit"
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+        className="rounded bg-graph px-4 py-2 text-sm font-medium text-white hover:bg-graph/90"
       >
         Resolver sistema
       </button>
 
-      <div className="border-t border-stone-200 pt-4">
+      <div className="border-t border-paper-line pt-4">
         <ResultPanel result={lastResult} isLoading={isLoading} />
       </div>
     </form>

@@ -110,7 +110,7 @@ export function BasicMode() {
           <button
             type="submit"
             aria-label="Evaluar"
-            className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-500"
+            className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-graph text-white hover:bg-graph/90"
           >
             →
           </button>
@@ -125,45 +125,45 @@ export function BasicMode() {
       <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
 
       <div className="flex flex-wrap gap-2">
-        <span className="pt-1.5 text-xs font-medium text-stone-400">Ejemplos:</span>
+        <span className="pt-1.5 text-xs font-medium text-muted">Ejemplos:</span>
         {EXAMPLES.map((example) => (
           <button
             key={example.display}
             type="button"
             onClick={() => setLatex(example.latex)}
-            className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs text-stone-600 hover:border-blue-300 hover:text-blue-600"
+            className="rounded-full border border-paper-line bg-paper-soft px-3 py-1 text-xs text-muted hover:border-marker/40 hover:text-marker"
           >
             {example.display}
           </button>
         ))}
       </div>
 
-      <details className="group rounded-lg border border-stone-200 bg-white open:pb-3">
-        <summary className="cursor-pointer list-none px-4 py-2.5 text-sm font-medium text-stone-600 marker:content-none">
+      <details className="group rounded-lg border border-paper-line bg-paper-soft open:pb-3">
+        <summary className="cursor-pointer list-none px-4 py-2.5 text-sm font-medium text-muted marker:content-none">
           Opciones avanzadas (sustituciones, unidad angular)
         </summary>
         <div className="space-y-4 px-4 pt-1">
           <div className="space-y-2">
-            <span className="block text-sm text-stone-600">Sustituciones (opcional)</span>
+            <span className="block text-sm text-muted">Sustituciones (opcional)</span>
             {substitutions.map((row, index) => (
               <div key={index} className="flex gap-2">
                 <input
                   aria-label={`Nombre de la variable ${index + 1}`}
                   value={row.name}
                   onChange={(e) => updateSubstitutionRow(index, "name", e.target.value)}
-                  className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm text-stone-900"
+                  className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm text-ink"
                 />
                 <input
                   aria-label={`Valor de la variable ${index + 1}`}
                   value={row.value}
                   onChange={(e) => updateSubstitutionRow(index, "value", e.target.value)}
-                  className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm text-stone-900"
+                  className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm text-ink"
                 />
                 <button
                   type="button"
                   onClick={() => removeSubstitutionRow(index)}
                   aria-label={`Eliminar sustitución ${index + 1}`}
-                  className="text-sm text-stone-400 hover:text-stone-600"
+                  className="text-sm text-muted hover:text-muted"
                 >
                   ✕
                 </button>
@@ -172,21 +172,21 @@ export function BasicMode() {
             <button
               type="button"
               onClick={addSubstitutionRow}
-              className="text-sm text-blue-600 hover:text-blue-700"
+              className="text-sm text-marker hover:text-marker-text"
             >
               + Añadir sustitución
             </button>
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="basic-angle-unit" className="block text-sm text-stone-600">
+            <label htmlFor="basic-angle-unit" className="block text-sm text-muted">
               Unidad angular
             </label>
             <select
               id="basic-angle-unit"
               value={angleUnit}
               onChange={(e) => setAngleUnit(e.target.value as "rad" | "deg")}
-              className="rounded border border-stone-300 bg-white px-2 py-1 text-sm text-stone-900"
+              className="rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm text-ink"
             >
               <option value="rad">Radianes</option>
               <option value="deg">Grados</option>
@@ -196,7 +196,7 @@ export function BasicMode() {
       </details>
 
       {(isLoading || lastResult) && (
-        <div className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+        <div className="rounded-lg border border-paper-line bg-paper-soft p-4 shadow-sm">
           <ResultPanel result={lastResult} isLoading={isLoading} />
         </div>
       )}

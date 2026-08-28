@@ -85,8 +85,8 @@ export function IntegralMode() {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="integral-mode-heading" className="space-y-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-      <h2 id="integral-mode-heading" className="text-sm font-medium text-stone-600">
+    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="integral-mode-heading" className="space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm">
+      <h2 id="integral-mode-heading" className="text-sm font-medium text-muted">
         Integral
       </h2>
 
@@ -103,7 +103,7 @@ export function IntegralMode() {
 
       <div className="flex gap-4">
         <div className="space-y-1">
-          <label htmlFor="integral-variable" className="block text-sm text-stone-600">
+          <label htmlFor="integral-variable" className="block text-sm text-muted">
             Variable
           </label>
           <input
@@ -111,11 +111,11 @@ export function IntegralMode() {
             type="text"
             value={variable}
             onChange={(e) => setVariable(e.target.value)}
-            className="w-20 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-20 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="integral-lower" className="block text-sm text-stone-600">
+          <label htmlFor="integral-lower" className="block text-sm text-muted">
             Límite inferior (opcional; "oo"/"-oo" para impropia)
           </label>
           <input
@@ -123,11 +123,11 @@ export function IntegralMode() {
             type="text"
             value={lowerBound}
             onChange={(e) => setLowerBound(e.target.value)}
-            className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="integral-upper" className="block text-sm text-stone-600">
+          <label htmlFor="integral-upper" className="block text-sm text-muted">
             Límite superior (opcional)
           </label>
           <input
@@ -135,7 +135,7 @@ export function IntegralMode() {
             type="text"
             value={upperBound}
             onChange={(e) => setUpperBound(e.target.value)}
-            className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
       </div>
@@ -148,12 +148,12 @@ export function IntegralMode() {
 
       <button
         type="submit"
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+        className="rounded bg-graph px-4 py-2 text-sm font-medium text-white hover:bg-graph/90"
       >
         Integrar
       </button>
 
-      <div className="border-t border-stone-200 pt-4">
+      <div className="border-t border-paper-line pt-4">
         <ResultPanel result={lastResult} isLoading={isLoading} />
       </div>
     </form>

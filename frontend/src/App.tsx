@@ -73,18 +73,18 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-900">
+    <div className="min-h-screen bg-paper text-ink">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-blue-600 focus:px-3 focus:py-2 focus:text-white"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-graph focus:px-3 focus:py-2 focus:text-white"
       >
         Saltar al contenido principal
       </a>
 
-      <header className="border-b border-stone-200 bg-white px-6 py-3">
+      <header className="border-b border-paper-line bg-paper-soft px-6 py-3">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <h1 className="text-lg font-semibold text-stone-900">
-            Calculadora<span className="text-blue-600">Científica</span>
+          <h1 className="text-lg font-semibold text-ink">
+            Precision<span className="text-marker">Lab</span>
           </h1>
           <div className="flex items-center gap-2">
             <button
@@ -92,7 +92,7 @@ export default function App() {
               onClick={() => setShowHistory((current) => !current)}
               aria-expanded={showHistory}
               aria-controls="history-panel"
-              className="rounded-full border border-stone-300 px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+              className="rounded-full border border-paper-line px-3 py-1.5 text-sm text-ink hover:bg-paper-line/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marker"
             >
               Historial
             </button>
@@ -101,7 +101,7 @@ export default function App() {
         </div>
       </header>
 
-      <nav aria-label="Modos de la calculadora" className="border-b border-stone-200 bg-white px-6">
+      <nav aria-label="Modos de la calculadora" className="border-b border-paper-line bg-paper-soft px-6">
         <ul className="mx-auto flex max-w-3xl flex-wrap gap-6">
           {MODE_ORDER.map((mode) => (
             <li key={mode}>
@@ -109,10 +109,10 @@ export default function App() {
                 type="button"
                 onClick={() => setActiveMode(mode)}
                 aria-current={activeMode === mode ? "page" : undefined}
-                className={`border-b-2 px-1 py-3 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
+                className={`border-b-2 px-1 py-3 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marker ${
                   activeMode === mode
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-stone-500 hover:text-stone-800"
+                    ? "border-marker text-marker"
+                    : "border-transparent text-muted hover:text-ink"
                 }`}
               >
                 {MODE_LABELS[mode]}
@@ -133,7 +133,7 @@ export default function App() {
           <section
             id="history-panel"
             aria-label="Historial de operaciones"
-            className="mb-6 rounded-xl border border-stone-200 bg-white p-4 shadow-sm"
+            className="mb-6 rounded-xl border border-paper-line bg-paper-soft p-4 shadow-sm"
           >
             <ErrorBoundary fallbackLabel="No se pudo mostrar el historial.">
               <History />

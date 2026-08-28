@@ -65,14 +65,14 @@ function MatrixGrid({
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <span className="text-sm text-stone-600">{label}</span>
-        <label className="text-xs text-stone-400">
+        <span className="text-sm text-muted">{label}</span>
+        <label className="text-xs text-muted">
           Filas
           <select
             aria-label={`Filas de ${label}`}
             value={rows}
             onChange={(e) => onDimensionsChange(Number(e.target.value), cols)}
-            className="ml-1 rounded border border-stone-300 bg-white px-1 py-0.5"
+            className="ml-1 rounded border border-paper-line bg-paper-soft px-1 py-0.5"
           >
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <option key={n} value={n}>
@@ -81,13 +81,13 @@ function MatrixGrid({
             ))}
           </select>
         </label>
-        <label className="text-xs text-stone-400">
+        <label className="text-xs text-muted">
           Columnas
           <select
             aria-label={`Columnas de ${label}`}
             value={cols}
             onChange={(e) => onDimensionsChange(rows, Number(e.target.value))}
-            className="ml-1 rounded border border-stone-300 bg-white px-1 py-0.5"
+            className="ml-1 rounded border border-paper-line bg-paper-soft px-1 py-0.5"
           >
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <option key={n} value={n}>
@@ -110,7 +110,7 @@ function MatrixGrid({
               aria-label={`${label} celda fila ${r + 1} columna ${c + 1}`}
               value={cell}
               onChange={(e) => onCellChange(r, c, e.target.value)}
-              className="w-14 rounded border border-stone-300 bg-white px-1 py-1 text-center text-sm"
+              className="w-14 rounded border border-paper-line bg-paper-soft px-1 py-1 text-center text-sm"
             />
           )),
         )}
@@ -206,20 +206,20 @@ export function MatrixMode() {
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-labelledby="matrix-mode-heading" className="space-y-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-      <h2 id="matrix-mode-heading" className="text-sm font-medium text-stone-600">
+    <form onSubmit={handleSubmit} aria-labelledby="matrix-mode-heading" className="space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm">
+      <h2 id="matrix-mode-heading" className="text-sm font-medium text-muted">
         Matrices
       </h2>
 
       <div className="space-y-1">
-        <label htmlFor="matrix-operation" className="block text-sm text-stone-600">
+        <label htmlFor="matrix-operation" className="block text-sm text-muted">
           Operación
         </label>
         <select
           id="matrix-operation"
           value={operation}
           onChange={(e) => setOperation(e.target.value as Operation)}
-          className="rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+          className="rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
         >
           {(Object.keys(OPERATION_LABELS) as Operation[]).map((op) => (
             <option key={op} value={op}>
@@ -246,7 +246,7 @@ export function MatrixMode() {
 
       {NEEDS_EXPONENT.has(operation) && (
         <div className="space-y-1">
-          <label htmlFor="matrix-exponent" className="block text-sm text-stone-600">
+          <label htmlFor="matrix-exponent" className="block text-sm text-muted">
             Exponente (entero, de -10 a 10)
           </label>
           <input
@@ -255,7 +255,7 @@ export function MatrixMode() {
             inputMode="numeric"
             value={exponent}
             onChange={(e) => setExponent(e.target.value)}
-            className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+            className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
           />
         </div>
       )}
@@ -285,12 +285,12 @@ export function MatrixMode() {
 
       <button
         type="submit"
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+        className="rounded bg-graph px-4 py-2 text-sm font-medium text-white hover:bg-graph/90"
       >
         Calcular
       </button>
 
-      <div className="border-t border-stone-200 pt-4">
+      <div className="border-t border-paper-line pt-4">
         <ResultPanel result={lastResult} isLoading={isLoading} />
       </div>
     </form>

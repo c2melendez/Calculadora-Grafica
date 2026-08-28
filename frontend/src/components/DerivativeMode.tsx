@@ -108,12 +108,12 @@ export function DerivativeMode() {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="derivative-mode-heading" className="space-y-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="derivative-mode-heading" className="space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 id="derivative-mode-heading" className="text-sm font-medium text-stone-600">
+        <h2 id="derivative-mode-heading" className="text-sm font-medium text-muted">
           Derivada
         </h2>
-        <label className="flex items-center gap-1.5 text-xs text-stone-500">
+        <label className="flex items-center gap-1.5 text-xs text-muted">
           <input
             type="checkbox"
             checked={isImplicit}
@@ -137,7 +137,7 @@ export function DerivativeMode() {
       {isImplicit ? (
         <div className="flex gap-4">
           <div className="space-y-1">
-            <label htmlFor="derivative-dependent" className="block text-sm text-stone-600">
+            <label htmlFor="derivative-dependent" className="block text-sm text-muted">
               Variable dependiente
             </label>
             <input
@@ -145,11 +145,11 @@ export function DerivativeMode() {
               type="text"
               value={dependentVariable}
               onChange={(e) => setDependentVariable(e.target.value)}
-              className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+              className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor="derivative-independent" className="block text-sm text-stone-600">
+            <label htmlFor="derivative-independent" className="block text-sm text-muted">
               Variable independiente
             </label>
             <input
@@ -157,14 +157,14 @@ export function DerivativeMode() {
               type="text"
               value={independentVariable}
               onChange={(e) => setIndependentVariable(e.target.value)}
-              className="w-24 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+              className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
             />
           </div>
         </div>
       ) : (
         <div className="flex gap-4">
           <div className="space-y-1">
-            <label htmlFor="derivative-variable" className="block text-sm text-stone-600">
+            <label htmlFor="derivative-variable" className="block text-sm text-muted">
               Variable
             </label>
             <input
@@ -172,11 +172,11 @@ export function DerivativeMode() {
               type="text"
               value={variable}
               onChange={(e) => setVariable(e.target.value)}
-              className="w-20 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+              className="w-20 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor="derivative-order" className="block text-sm text-stone-600">
+            <label htmlFor="derivative-order" className="block text-sm text-muted">
               Orden
             </label>
             <input
@@ -186,7 +186,7 @@ export function DerivativeMode() {
               max={5}
               value={order}
               onChange={(e) => setOrder(Number(e.target.value))}
-              className="w-20 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+              className="w-20 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
             />
           </div>
         </div>
@@ -200,12 +200,12 @@ export function DerivativeMode() {
 
       <button
         type="submit"
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+        className="rounded bg-graph px-4 py-2 text-sm font-medium text-white hover:bg-graph/90"
       >
         Derivar
       </button>
 
-      <div className="border-t border-stone-200 pt-4">
+      <div className="border-t border-paper-line pt-4">
         <ResultPanel result={lastResult} isLoading={isLoading} />
       </div>
     </form>

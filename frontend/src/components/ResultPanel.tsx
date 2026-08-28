@@ -46,7 +46,7 @@ function CopyButton({ text, label }: { text: string | null; label: string }) {
       type="button"
       onClick={handleClick}
       disabled={text === null}
-      className="rounded border border-stone-300 px-3 py-1 text-xs text-stone-600 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
+      className="rounded border border-paper-line px-3 py-1 text-xs text-muted hover:bg-paper-line/40 disabled:cursor-not-allowed disabled:opacity-40"
     >
       {justCopied ? "¡Copiado!" : label}
     </button>
@@ -77,7 +77,7 @@ function MatrixResult({ matrix }: { matrix: string[][] }) {
               {row.map((cell, c) => (
                 <td
                   key={c}
-                  className="min-w-[3rem] rounded border border-stone-200 bg-stone-50 px-3 py-2 text-center text-base text-stone-900"
+                  className="min-w-[3rem] rounded border border-paper-line bg-paper px-3 py-2 text-center text-base text-ink"
                 >
                   {cell}
                 </td>
@@ -92,14 +92,14 @@ function MatrixResult({ matrix }: { matrix: string[][] }) {
 
 function SolutionListResult({ solutions }: { solutions: EquationSolution[] }) {
   if (solutions.length === 0) {
-    return <p className="text-sm text-stone-500">El sistema no tiene solución.</p>;
+    return <p className="text-sm text-muted">El sistema no tiene solución.</p>;
   }
   return (
     <ul className="space-y-2">
       {solutions.map((solution, index) => (
-        <li key={index} className="text-lg text-stone-900">
+        <li key={index} className="text-lg text-ink">
           <MathRenderer latex={solution.latex} fallbackText={solution.text} />
-          {solution.is_complex && <span className="ml-2 text-xs text-stone-400">(compleja)</span>}
+          {solution.is_complex && <span className="ml-2 text-xs text-muted">(compleja)</span>}
         </li>
       ))}
     </ul>
@@ -109,7 +109,7 @@ function SolutionListResult({ solutions }: { solutions: EquationSolution[] }) {
 export function ResultPanel({ result, isLoading }: ResultPanelProps) {
   if (isLoading) {
     return (
-      <div role="status" aria-live="polite" className="text-sm text-stone-400">
+      <div role="status" aria-live="polite" className="text-sm text-muted">
         Calculando…
       </div>
     );
@@ -117,7 +117,7 @@ export function ResultPanel({ result, isLoading }: ResultPanelProps) {
 
   if (result === null) {
     return (
-      <p className="text-sm text-stone-400">
+      <p className="text-sm text-muted">
         Introduce una expresión y envía el formulario para ver el resultado aquí.
       </p>
     );
@@ -153,13 +153,13 @@ export function ResultPanel({ result, isLoading }: ResultPanelProps) {
               className="text-lg"
             />
           ) : (
-            <p className="text-lg text-stone-900">{result.result_text}</p>
+            <p className="text-lg text-ink">{result.result_text}</p>
           )}
           {/* Fracción exacta (arriba) y decimal (abajo) mostrados juntos —
               nunca uno oculta al otro (sección 9: fracciones + su
               equivalente decimal). */}
           {approxText && approxText !== result.result_text && (
-            <p className="text-sm text-stone-500">≈ {approxText}</p>
+            <p className="text-sm text-muted">≈ {approxText}</p>
           )}
         </div>
       )}

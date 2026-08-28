@@ -73,8 +73,8 @@ export function EquationMode() {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="equation-mode-heading" className="space-y-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-      <h2 id="equation-mode-heading" className="text-sm font-medium text-stone-600">
+    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="equation-mode-heading" className="space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm">
+      <h2 id="equation-mode-heading" className="text-sm font-medium text-muted">
         Ecuación
       </h2>
 
@@ -87,14 +87,14 @@ export function EquationMode() {
           fieldRef={setMathField}
         />
         <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
-        <p className="px-1 text-xs text-stone-400" role="note">
+        <p className="px-1 text-xs text-muted" role="note">
           Escribe = para resolver una ecuación, o &lt;, &gt;, ≤, ≥ para una desigualdad — se
           detecta automáticamente.
         </p>
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="equation-variable" className="block text-sm text-stone-600">
+        <label htmlFor="equation-variable" className="block text-sm text-muted">
           Variable a despejar (opcional)
         </label>
         <input
@@ -103,23 +103,23 @@ export function EquationMode() {
           value={variable}
           onChange={(e) => setVariable(e.target.value)}
           aria-describedby="equation-variable-hint"
-          className="w-32 rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+          className="w-32 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
         />
-        <p id="equation-variable-hint" className="text-xs text-stone-400" role="note">
+        <p id="equation-variable-hint" className="text-xs text-muted" role="note">
           Si la ecuación tiene una única variable libre, se infiere automáticamente. Si tiene más de
           una, hay que especificarla aquí.
         </p>
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="equation-angle-unit" className="block text-sm text-stone-600">
+        <label htmlFor="equation-angle-unit" className="block text-sm text-muted">
           Unidad angular
         </label>
         <select
           id="equation-angle-unit"
           value={angleUnit}
           onChange={(e) => setAngleUnit(e.target.value as "rad" | "deg")}
-          className="rounded border border-stone-300 bg-white px-2 py-1 text-sm"
+          className="rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
         >
           <option value="rad">Radianes</option>
           <option value="deg">Grados</option>
@@ -134,12 +134,12 @@ export function EquationMode() {
 
       <button
         type="submit"
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+        className="rounded bg-graph px-4 py-2 text-sm font-medium text-white hover:bg-graph/90"
       >
         Resolver
       </button>
 
-      <div className="border-t border-stone-200 pt-4">
+      <div className="border-t border-paper-line pt-4">
         <ResultPanel result={lastResult} isLoading={isLoading} />
       </div>
     </form>
