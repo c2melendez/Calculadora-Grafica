@@ -11,6 +11,7 @@
 import { useState } from "react";
 
 import { BasicMode } from "./components/BasicMode";
+import { SimpleBasicMode } from "./components/SimpleBasicMode";
 import { DerivativeMode } from "./components/DerivativeMode";
 import { EquationMode } from "./components/EquationMode";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -23,7 +24,8 @@ import { ThemeToggle } from "./components/ThemeToggle";
 import { useUIStore, type CalculatorMode } from "./store/useUIStore";
 
 const MODE_LABELS: Record<CalculatorMode, string> = {
-  basic: "Básico",
+  basic: "Científica",
+  simple: "Basic",
   derivative: "Derivada",
   integral: "Integral",
   equation: "Ecuación",
@@ -34,6 +36,7 @@ const MODE_LABELS: Record<CalculatorMode, string> = {
 
 const MODE_ORDER: CalculatorMode[] = [
   "basic",
+  "simple",
   "derivative",
   "integral",
   "equation",
@@ -46,6 +49,8 @@ function ActiveModeForm({ mode }: { mode: CalculatorMode }) {
   switch (mode) {
     case "basic":
       return <BasicMode />;
+    case "simple":
+      return <SimpleBasicMode />;
     case "derivative":
       return <DerivativeMode />;
     case "integral":
