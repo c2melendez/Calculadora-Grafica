@@ -24,6 +24,9 @@ export const KNOWN_ENDPOINTS = [
   "/matrix/inverse",
   "/matrix/transpose",
   "/matrix/power",
+  // --- Fase C (spec UX estilo ClassCalc §4) ---
+  "/matrix/ref",
+  "/matrix/rref",
   "/graph/2d",
   // --- Fase 2 (passthrough trivial real o UNSUPPORTED_IN_PHASE_1) ---
   "/solve/system",

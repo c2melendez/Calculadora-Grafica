@@ -15,24 +15,30 @@ type Operation =
   | "add"
   | "subtract"
   | "multiply"
+  | "kronecker"
   | "transpose"
   | "determinant"
   | "inverse"
   | "power"
-  | "eigen";
+  | "eigen"
+  | "ref"
+  | "rref";
 
 const OPERATION_LABELS: Record<Operation, string> = {
   add: "Suma (A + B)",
   subtract: "Resta (A − B)",
   multiply: "Multiplicación (A × B)",
+  kronecker: "Kronecker (A ⊗ B)",
   transpose: "Transposición (Aᵀ)",
   determinant: "Determinante (|A|)",
   inverse: "Inversa (A⁻¹)",
   power: "Potencia (Aⁿ)",
   eigen: "Eigenvalores y eigenvectores",
+  ref: "Forma escalonada (ref)",
+  rref: "Forma escalonada reducida (rref)",
 };
 
-const NEEDS_MATRIX_B: ReadonlySet<Operation> = new Set(["add", "subtract", "multiply"]);
+const NEEDS_MATRIX_B: ReadonlySet<Operation> = new Set(["add", "subtract", "multiply", "kronecker"]);
 const NEEDS_EXPONENT: ReadonlySet<Operation> = new Set(["power"]);
 
 function emptyMatrix(rows: number, cols: number): string[][] {
@@ -54,6 +60,31 @@ interface MatrixGridProps {
   onCellChange: (row: number, col: number, value: string) => void;
 }
 
+function Stepper({ label, value, onChange }: { label: string; value: number; onChange: (n: number) => void }) {
+  return (
+    <label className="flex items-center gap-1.5 text-xs text-muted">
+      {label}
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(1, value - 1))}
+        aria-label={`Reducir ${label}`}
+        className="h-5 w-5 rounded-full bg-paper-line/60 text-ink hover:bg-paper-line"
+      >
+        −
+      </button>
+      <span className="w-4 text-center font-mono text-ink">{value}</span>
+      <button
+        type="button"
+        onClick={() => onChange(Math.min(6, value + 1))}
+        aria-label={`Aumentar ${label}`}
+        className="h-5 w-5 rounded-full bg-paper-line/60 text-ink hover:bg-paper-line"
+      >
+        +
+      </button>
+    </label>
+  );
+}
+
 function MatrixGrid({
   label,
   matrix,
@@ -64,38 +95,10 @@ function MatrixGrid({
 }: MatrixGridProps) {
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <span className="text-sm text-muted">{label}</span>
-        <label className="text-xs text-muted">
-          Filas
-          <select
-            aria-label={`Filas de ${label}`}
-            value={rows}
-            onChange={(e) => onDimensionsChange(Number(e.target.value), cols)}
-            className="ml-1 rounded border border-paper-line bg-paper-soft px-1 py-0.5"
-          >
-            {[1, 2, 3, 4, 5, 6].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs text-muted">
-          Columnas
-          <select
-            aria-label={`Columnas de ${label}`}
-            value={cols}
-            onChange={(e) => onDimensionsChange(rows, Number(e.target.value))}
-            className="ml-1 rounded border border-paper-line bg-paper-soft px-1 py-0.5"
-          >
-            {[1, 2, 3, 4, 5, 6].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Stepper label="Filas" value={rows} onChange={(n) => onDimensionsChange(n, cols)} />
+        <Stepper label="Col" value={cols} onChange={(n) => onDimensionsChange(rows, n)} />
       </div>
       <div
         role="group"
@@ -174,7 +177,7 @@ export function MatrixMode() {
       let result: MathResponse;
       const label = `Matriz A ${rowsA}x${colsA} — ${OPERATION_LABELS[operation]}`;
 
-      if (operation === "add" || operation === "subtract" || operation === "multiply") {
+      if (operation === "add" || operation === "subtract" || operation === "multiply" || operation === "kronecker") {
         result = await submitAndRecord(
           "/matrix/operations",
           { operation, matrix_a: matrixA, matrix_b: matrixB },
@@ -186,6 +189,10 @@ export function MatrixMode() {
         result = await submitAndRecord("/matrix/determinant", { matrix: matrixA }, label);
       } else if (operation === "inverse") {
         result = await submitAndRecord("/matrix/inverse", { matrix: matrixA }, label);
+      } else if (operation === "ref") {
+        result = await submitAndRecord("/matrix/ref", { matrix: matrixA }, label);
+      } else if (operation === "rref") {
+        result = await submitAndRecord("/matrix/rref", { matrix: matrixA }, label);
       } else if (operation === "power") {
         result = await submitAndRecord(
           "/matrix/power",

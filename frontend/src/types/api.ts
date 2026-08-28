@@ -751,7 +751,7 @@ export interface components {
          * OperationType
          * @enum {string}
          */
-        OperationType: "evaluate" | "simplify" | "factor" | "expand" | "solve" | "derivative" | "integral" | "matrix_operation" | "matrix_determinant" | "matrix_inverse" | "graph_2d" | "solve_system" | "inequality" | "limit" | "series" | "matrix_eigen" | "integral_improper" | "graph_3d" | "graph_parametric" | "derivative_partial" | "derivative_implicit" | "matrix_transpose" | "matrix_power";
+        OperationType: "evaluate" | "simplify" | "factor" | "expand" | "solve" | "derivative" | "integral" | "matrix_operation" | "matrix_determinant" | "matrix_inverse" | "graph_2d" | "solve_system" | "inequality" | "limit" | "series" | "matrix_eigen" | "integral_improper" | "graph_3d" | "graph_parametric" | "derivative_partial" | "derivative_implicit" | "matrix_transpose" | "matrix_power" | "matrix_ref" | "matrix_rref";
         /** PartialDerivativeRequest */
         PartialDerivativeRequest: {
             /** Expression */

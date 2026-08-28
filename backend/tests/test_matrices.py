@@ -243,3 +243,65 @@ def test_determinant_parse_error_propagates():
     assert body["success"] is False
     assert body["error_code"] == "PARSE_ERROR"
     assert body["operation"] == "matrix_determinant"
+
+
+# --------------------------------------------------------------------------
+# Fase C (spec UX estilo ClassCalc, sección 4) — ref/rref/producto de
+# Kronecker. Verificado contra sympy real (Matrix.rref()/.echelon_form())
+# antes de escribir estos casos, no asumido.
+# --------------------------------------------------------------------------
+
+
+def _single(endpoint, matrix):
+    return client.post(f"/api/v1/matrix/{endpoint}", json={"matrix": matrix})
+
+
+def test_rref_singular_matrix_leaves_dependent_row_zero():
+    response = _single("rref", [["1", "2"], ["2", "4"]])
+    body = response.json()
+    assert body["success"] is True
+    assert body["has_detailed_steps"] is True
+    assert body["result_data"] == [["1", "2"], ["0", "0"]]
+
+
+def test_ref_identity_unchanged():
+    response = _single("ref", [["1", "0"], ["0", "1"]])
+    body = response.json()
+    assert body["success"] is True
+    assert body["result_data"] == [["1", "0"], ["0", "1"]]
+
+
+def test_rref_3x3_known_system():
+    # Sistema con solución única x=1,y=2,z=3 codificado como matriz
+    # aumentada; rref debe dar la identidad aumentada con la solución.
+    response = _single(
+        "rref",
+        [["1", "1", "1", "6"], ["0", "1", "2", "8"], ["0", "0", "1", "3"]],
+    )
+    body = response.json()
+    assert body["success"] is True
+    assert body["result_data"] == [
+        ["1", "0", "0", "1"],
+        ["0", "1", "0", "2"],
+        ["0", "0", "1", "3"],
+    ]
+
+
+def test_kronecker_2x2_with_2x2():
+    response = _matrix_op("kronecker", [["1", "2"], ["3", "4"]], [["0", "5"], ["6", "7"]])
+    body = response.json()
+    assert body["success"] is True
+    assert body["result_data"] == [
+        ["0", "5", "0", "10"],
+        ["6", "7", "12", "14"],
+        ["0", "15", "0", "20"],
+        ["18", "21", "24", "28"],
+    ]
+
+
+def test_ref_parse_error_propagates():
+    response = _single("ref", [["eval(1)", "2"], ["3", "4"]])
+    body = response.json()
+    assert body["success"] is False
+    assert body["error_code"] == "PARSE_ERROR"
+    assert body["operation"] == "matrix_ref"

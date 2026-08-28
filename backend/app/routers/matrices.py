@@ -55,6 +55,8 @@ async def matrix_operations(payload: MatrixOperationRequest, request: Request) -
     try:
         if payload.operation in (MatrixOpKind.ADD, MatrixOpKind.SUBTRACT):
             result = matrix_service.add_or_subtract(matrix_a, matrix_b, payload.operation)
+        elif payload.operation == MatrixOpKind.KRONECKER:
+            result = matrix_service.kronecker(matrix_a, matrix_b)
         else:
             result = matrix_service.multiply(matrix_a, matrix_b)
     except matrix_service.DimensionMismatchError as exc:
@@ -65,6 +67,60 @@ async def matrix_operations(payload: MatrixOperationRequest, request: Request) -
     return MathResponse(
         success=True,
         operation=OperationType.MATRIX_OPERATION,
+        request_id=request.state.request_id,
+        result_type=ResultType.MATRIX,
+        result_data=matrix_service.matrix_to_result_data(result.result_matrix),
+        steps=result.steps,
+        has_detailed_steps=result.has_detailed_steps,
+        warnings=result.warnings,
+        duration_ms=_duration_ms(request),
+    )
+
+
+@router.post("/matrix/ref", response_model=MathResponse)
+async def matrix_ref(payload: MatrixSingleRequest, request: Request) -> MathResponse:
+    """Fase C (spec UX estilo ClassCalc, sección 4)."""
+    log_request_event(request.state.request_id, "matrix_ref_request")
+
+    try:
+        matrix = matrix_service.parse_matrix(payload.matrix)
+    except parsing.ParseSecurityError as exc:
+        return _error(request, OperationType.MATRIX_REF, ErrorCode.PARSE_ERROR, str(exc))
+    except ComplexityLimitError as exc:
+        return _error(request, OperationType.MATRIX_REF, ErrorCode.COMPLEXITY_LIMIT, str(exc))
+
+    result = matrix_service.ref(matrix)
+
+    return MathResponse(
+        success=True,
+        operation=OperationType.MATRIX_REF,
+        request_id=request.state.request_id,
+        result_type=ResultType.MATRIX,
+        result_data=matrix_service.matrix_to_result_data(result.result_matrix),
+        steps=result.steps,
+        has_detailed_steps=result.has_detailed_steps,
+        warnings=result.warnings,
+        duration_ms=_duration_ms(request),
+    )
+
+
+@router.post("/matrix/rref", response_model=MathResponse)
+async def matrix_rref(payload: MatrixSingleRequest, request: Request) -> MathResponse:
+    """Fase C (spec UX estilo ClassCalc, sección 4)."""
+    log_request_event(request.state.request_id, "matrix_rref_request")
+
+    try:
+        matrix = matrix_service.parse_matrix(payload.matrix)
+    except parsing.ParseSecurityError as exc:
+        return _error(request, OperationType.MATRIX_RREF, ErrorCode.PARSE_ERROR, str(exc))
+    except ComplexityLimitError as exc:
+        return _error(request, OperationType.MATRIX_RREF, ErrorCode.COMPLEXITY_LIMIT, str(exc))
+
+    result = matrix_service.rref(matrix)
+
+    return MathResponse(
+        success=True,
+        operation=OperationType.MATRIX_RREF,
         request_id=request.state.request_id,
         result_type=ResultType.MATRIX,
         result_data=matrix_service.matrix_to_result_data(result.result_matrix),

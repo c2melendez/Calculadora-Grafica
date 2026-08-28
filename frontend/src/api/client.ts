@@ -42,6 +42,8 @@ const ENDPOINT_TO_OPERATION: Record<KnownEndpoint, OperationType | null> = {
   "/matrix/inverse": "matrix_inverse",
   "/matrix/transpose": "matrix_transpose",
   "/matrix/power": "matrix_power",
+  "/matrix/ref": "matrix_ref",
+  "/matrix/rref": "matrix_rref",
   "/graph/2d": "graph_2d",
   "/solve/system": "solve_system",
   "/inequality": "inequality",

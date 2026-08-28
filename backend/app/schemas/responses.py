@@ -39,12 +39,19 @@ class OperationType(str, Enum):
     DERIVATIVE_IMPLICIT = "derivative_implicit"
     MATRIX_TRANSPOSE = "matrix_transpose"
     MATRIX_POWER = "matrix_power"
+    # Fase C (spec UX estilo ClassCalc, sección 4) — agregadas sobre las
+    # que ya traía la spec v9 original.
+    MATRIX_REF = "matrix_ref"
+    MATRIX_RREF = "matrix_rref"
 
 
 class MatrixOpKind(str, Enum):
     ADD = "add"
     SUBTRACT = "subtract"
     MULTIPLY = "multiply"
+    # Fase C: producto de Kronecker, va en /matrix/operations junto con
+    # add/subtract/multiply porque también necesita dos matrices.
+    KRONECKER = "kronecker"
 
 
 class ResultType(str, Enum):

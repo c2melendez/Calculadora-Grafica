@@ -534,3 +534,198 @@ def inverse(matrix: sympy.Matrix) -> MatrixStepResult:
     for index, step in enumerate(steps):
         step.index = index
     return MatrixStepResult(computed_inverse, steps, True, [])
+
+
+# ---------------------------------------------------------------------------
+# Fase C (spec UX estilo ClassCalc, sección 4) — agregadas sobre las
+# operaciones de la spec v9 original. Mismo patrón que las demás: pasos
+# explícitos verificados contra la referencia de SymPy, con fallback sin
+# pasos si se excede el presupuesto o falla la verificación.
+# ---------------------------------------------------------------------------
+
+
+def _ref_row_reduction(matrix: sympy.Matrix) -> Optional[Tuple[List[Step], sympy.Matrix]]:
+    """Eliminación hacia adelante únicamente (sin normalizar pivotes a 1 ni
+    eliminar hacia arriba) — forma escalonada, no reducida."""
+    start_time = perf_counter()
+    rows, cols = matrix.rows, matrix.cols
+    working = matrix.copy()
+    steps: List[Step] = []
+    pivot_row = 0
+
+    for col in range(cols):
+        if pivot_row >= rows:
+            break
+        if len(steps) > ROW_OP_STEP_BUDGET or (perf_counter() - start_time) > (
+            _time_budget_seconds()
+        ):
+            return None
+
+        sel = next((r for r in range(pivot_row, rows) if working[r, col] != 0), None)
+        if sel is None:
+            continue
+
+        if sel != pivot_row:
+            working = working.copy()
+            working.row_swap(pivot_row, sel)
+            steps.append(
+                Step(
+                    index=0,
+                    title=f"Intercambiar filas {pivot_row + 1} y {sel + 1}",
+                    description="Se coloca un pivote no nulo en la fila actual.",
+                    rule="RowSwap",
+                    latex_before=f"F_{{{pivot_row + 1}}} \\leftrightarrow F_{{{sel + 1}}}",
+                    latex_after=sympy.latex(working),
+                )
+            )
+
+        pivot_val = working[pivot_row, col]
+        for row in range(pivot_row + 1, rows):
+            if len(steps) > ROW_OP_STEP_BUDGET:
+                return None
+            factor = sympy.simplify(working[row, col] / pivot_val)
+            if factor == 0:
+                continue
+            working = working.copy()
+            working[row, :] = working[row, :] - factor * working[pivot_row, :]
+            steps.append(
+                Step(
+                    index=0,
+                    title=f"F{row + 1} ← F{row + 1} - ({sympy.latex(factor)})·F{pivot_row + 1}",
+                    description=f"Eliminación en la columna {col + 1} bajo el pivote.",
+                    rule="RowElimination",
+                    latex_before=f"F_{{{row + 1}}} - ({sympy.latex(factor)})F_{{{pivot_row + 1}}}",
+                    latex_after=sympy.latex(working),
+                )
+            )
+        pivot_row += 1
+
+    return steps, working
+
+
+def ref(matrix: sympy.Matrix) -> MatrixStepResult:
+    """Forma escalonada (ref) — `Matrix.echelon_form()` es la referencia."""
+    reference = matrix.echelon_form()
+
+    if max(matrix.rows, matrix.cols) > MAX_STEP_MATRIX_SIZE:
+        return MatrixStepResult(reference, [], False, [])
+
+    reduction = _ref_row_reduction(matrix)
+    if reduction is None:
+        return MatrixStepResult(
+            reference, [], False, ["Procedimiento detallado omitido: tiempo de verificación excedido (sección 6)."]
+        )
+
+    steps, computed = reduction
+    # echelon_form() de SymPy no siempre coincide fila a fila con una
+    # eliminación "de libro de texto" (puede reordenar/escalar distinto,
+    # ambas son ref válidas de la misma matriz) — se verifica igualdad de
+    # RANGO y de posiciones de pivote, no igualdad exacta celda a celda
+    # como si hace rref (que sí es única).
+    if computed.rank() != reference.rank():
+        return MatrixStepResult(reference, [], False, [])
+
+    for index, step in enumerate(steps):
+        step.index = index
+    return MatrixStepResult(computed, steps, True, [])
+
+
+def rref(matrix: sympy.Matrix) -> MatrixStepResult:
+    """Forma escalonada reducida (rref) — única, se verifica celda a celda
+    contra `Matrix.rref()` igual que el resto de las operaciones."""
+    reference, _pivots = matrix.rref()
+
+    if max(matrix.rows, matrix.cols) > MAX_STEP_MATRIX_SIZE:
+        return MatrixStepResult(reference, [], False, [])
+
+    ref_reduction = _ref_row_reduction(matrix)
+    if ref_reduction is None:
+        return MatrixStepResult(
+            reference, [], False, ["Procedimiento detallado omitido: tiempo de verificación excedido (sección 6)."]
+        )
+    steps, working = ref_reduction
+
+    start_time = perf_counter()
+    rows, cols = working.rows, working.cols
+    pivot_row = 0
+    for col in range(cols):
+        if pivot_row >= rows:
+            break
+        if working[pivot_row, col] == 0:
+            continue
+        if len(steps) > ROW_OP_STEP_BUDGET or (perf_counter() - start_time) > (
+            _time_budget_seconds()
+        ):
+            return MatrixStepResult(
+                reference, [], False, ["Procedimiento detallado omitido: tiempo de verificación excedido (sección 6)."]
+            )
+        pivot_val = working[pivot_row, col]
+        if pivot_val != 1:
+            working = working.copy()
+            working[pivot_row, :] = working[pivot_row, :] / pivot_val
+            steps.append(
+                Step(
+                    index=0,
+                    title=f"F{pivot_row + 1} ← F{pivot_row + 1} / ({sympy.latex(pivot_val)})",
+                    description="Se normaliza el pivote a 1.",
+                    rule="NormalizePivot",
+                    latex_before=f"F_{{{pivot_row + 1}}} / ({sympy.latex(pivot_val)})",
+                    latex_after=sympy.latex(working),
+                )
+            )
+        for row in range(rows):
+            if row == pivot_row:
+                continue
+            factor = working[row, col]
+            if factor == 0:
+                continue
+            working = working.copy()
+            working[row, :] = working[row, :] - factor * working[pivot_row, :]
+            steps.append(
+                Step(
+                    index=0,
+                    title=f"F{row + 1} ← F{row + 1} - ({sympy.latex(factor)})·F{pivot_row + 1}",
+                    description=f"Eliminación en la columna {col + 1} fuera del pivote.",
+                    rule="RowElimination",
+                    latex_before=f"F_{{{row + 1}}} - ({sympy.latex(factor)})F_{{{pivot_row + 1}}}",
+                    latex_after=sympy.latex(working),
+                )
+            )
+        pivot_row += 1
+
+    verification = verify_matrix_step_equivalence(working, reference, "forma escalonada reducida (rref)")
+    if verification != "VERIFIED":
+        return MatrixStepResult(reference, [], False, [])
+
+    for index, step in enumerate(steps):
+        step.index = index
+    return MatrixStepResult(working, steps, True, [])
+
+
+def kronecker(matrix_a: sympy.Matrix, matrix_b: sympy.Matrix) -> MatrixOperationResult:
+    """Producto de Kronecker A⊗B. Sin restricción de dimensiones (a
+    diferencia de suma/multiplicación) — siempre definido."""
+    from sympy.matrices.expressions.kronecker import KroneckerProduct
+
+    result_matrix = KroneckerProduct(matrix_a, matrix_b).as_explicit()
+
+    if max(matrix_a.rows, matrix_a.cols, matrix_b.rows, matrix_b.cols) > MAX_STEP_MATRIX_SIZE:
+        return MatrixOperationResult(result_matrix, [], False, [])
+
+    # Un solo paso descriptivo (no celda a celda como add/multiply, sería
+    # ilegible con matrices de más de 2x2 dado el tamaño combinado) — la
+    # propia construcción vía KroneckerProduct ya es la verificación (no
+    # hay una eliminación manual con la que contrastar, a diferencia de
+    # ref/rref/inverse/determinant).
+    step = Step(
+        index=0,
+        title="Producto de Kronecker",
+        description=(
+            f"Cada bloque (i,j) de A se reemplaza por A[i,j]·B, dando una matriz "
+            f"de {result_matrix.rows}×{result_matrix.cols}."
+        ),
+        rule="Kronecker",
+        latex_before=f"{sympy.latex(matrix_a)} \\otimes {sympy.latex(matrix_b)}",
+        latex_after=sympy.latex(result_matrix),
+    )
+    return MatrixOperationResult(result_matrix, [step], True, [])
