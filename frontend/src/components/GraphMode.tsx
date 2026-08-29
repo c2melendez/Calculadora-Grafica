@@ -20,6 +20,12 @@ import { ResultPanel } from "./ResultPanel";
 
 const GraphViewer = lazy(() => import("./GraphViewer"));
 
+// Fase D (spec UX estilo ClassCalc §6): mismos colores que
+// GraphViewer.CURVE_COLORS, duplicados aquí a propósito — importar el
+// export nombrado desde GraphViewer.tsx forzaría a que ese archivo se
+// incluya en el bundle principal en vez de cargarse solo vía
+// React.lazy() cuando el componente realmente se monta (Módulo 12).
+
 const MAX_EXPRESSIONS = 5;
 
 type GraphKind = "2d" | "3d" | "parametric";
@@ -29,6 +35,8 @@ const GRAPH_KIND_LABELS: Record<GraphKind, string> = {
   "3d": "3D",
   parametric: "Paramétrica",
 };
+
+const CURVE_COLORS = ["#E8A33D", "#3E7C74", "#9B7FD6", "#D97757", "#5B94C9"];
 
 function AnalysisPanel({ result }: { result: MathResponse }) {
   if (!result.graph_data?.analysis) return null;
@@ -77,12 +85,20 @@ function AnalysisPanel({ result }: { result: MathResponse }) {
   );
 }
 
-function ResultArea({ result, isLoading }: { result: MathResponse | null; isLoading: boolean }) {
+function ResultArea({
+  result,
+  isLoading,
+  colors,
+}: {
+  result: MathResponse | null;
+  isLoading: boolean;
+  colors?: string[];
+}) {
   if (!isLoading && result?.success && result.graph_data) {
     return (
       <div className="space-y-4">
         <Suspense fallback={<p className="text-sm text-muted">Cargando visor de gráficas…</p>}>
-          <GraphViewer data={result.graph_data} />
+          <GraphViewer data={result.graph_data} colors={colors} />
         </Suspense>
         <AnalysisPanel result={result} />
       </div>
@@ -169,6 +185,11 @@ function Graph2DForm() {
         <span className="block text-sm text-muted">Expresiones (hasta {MAX_EXPRESSIONS})</span>
         {latexRows.map((row, index) => (
           <div key={index} className="flex items-center gap-2">
+            <span
+              className="h-3 w-3 shrink-0 rounded-full"
+              style={{ backgroundColor: CURVE_COLORS[index % CURVE_COLORS.length] }}
+              aria-hidden="true"
+            />
             <div className="flex-1">
               <NaturalMathField
                 latex={row}
@@ -309,7 +330,7 @@ function Graph2DForm() {
       </button>
 
       <div className="border-t border-paper-line pt-4">
-        <ResultArea result={lastResult} isLoading={isLoading} />
+        <ResultArea result={lastResult} isLoading={isLoading} colors={CURVE_COLORS} />
       </div>
     </form>
   );

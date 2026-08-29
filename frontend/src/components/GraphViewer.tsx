@@ -28,7 +28,12 @@ interface PlotlyModule {
   purge: (div: HTMLElement) => void;
 }
 
-function traceToPlotly(trace: GraphData["traces"][number]) {
+// Fase D (spec UX estilo ClassCalc §6): colores explícitos por curva, en
+// vez del ciclo de color por defecto de Plotly — para que coincidan con
+// los puntos de color del sidebar de expresiones en GraphMode.tsx.
+export const CURVE_COLORS = ["#E8A33D", "#3E7C74", "#9B7FD6", "#D97757", "#5B94C9"];
+
+function traceToPlotly(trace: GraphData["traces"][number], color?: string) {
   if (trace.type === "surface") {
     return {
       x: trace.x,
@@ -46,6 +51,7 @@ function traceToPlotly(trace: GraphData["traces"][number]) {
     type: "scatter" as const,
     mode: "lines" as const,
     name: trace.name,
+    line: color ? { color } : undefined,
     connectgaps: false, // los `null` (discontinuidades, sección 10) cortan la línea
   };
 }
@@ -56,9 +62,13 @@ function isSurface(data: GraphData): boolean {
 
 interface GraphViewerProps {
   data: GraphData;
+  /** Colores por índice de traza, alineados con los puntos del sidebar
+   * de expresiones (spec §6). Opcional — sin esto, Plotly usa su propio
+   * ciclo de color por defecto (comportamiento anterior, sin cambios). */
+  colors?: string[];
 }
 
-export default function GraphViewer({ data }: GraphViewerProps) {
+export default function GraphViewer({ data, colors }: GraphViewerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const plotlyRef = useRef<PlotlyModule | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -82,7 +92,7 @@ export default function GraphViewer({ data }: GraphViewerProps) {
 
         await Plotly.newPlot(
           safeContainer,
-          data.traces.map(traceToPlotly),
+          data.traces.map((trace, i) => traceToPlotly(trace, colors?.[i])),
           isSurface(data)
             ? {
                 scene: {
@@ -119,7 +129,7 @@ export default function GraphViewer({ data }: GraphViewerProps) {
         plotlyRef.current.purge(safeContainer);
       }
     };
-  }, [data]);
+  }, [data, colors]);
 
   async function handleDownloadPng(): Promise<void> {
     if (!containerRef.current || !plotlyRef.current) return;
