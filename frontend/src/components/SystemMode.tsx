@@ -30,6 +30,7 @@ export function SystemMode() {
   const setLoading = useUIStore((state) => state.setLoading);
   const setErrorMessage = useUIStore((state) => state.setErrorMessage);
   const isLoading = useUIStore((state) => state.isLoading);
+  const setActiveMode = useUIStore((state) => state.setActiveMode);
 
   function updateRow(index: number, value: string): void {
     setLatexRows((current) => current.map((row, i) => (i === index ? value : row)));
@@ -167,6 +168,7 @@ export function SystemMode() {
         <NaturalMathKeyboard
           field={mathFields[activeRow] ?? null}
           onSubmit={() => formRef.current?.requestSubmit()}
+          onGoToDerivative={() => setActiveMode("derivative")}
         />
       </div>
 
