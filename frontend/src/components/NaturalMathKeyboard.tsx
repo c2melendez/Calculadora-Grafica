@@ -38,7 +38,16 @@ const BASE_GRID: KeyDef[][] = [
     key("ln", "\\ln\\left(#0\\right)", "logaritmo natural"),
     key("cos", "\\cos\\left(#0\\right)", "coseno"),
     key("e", "e", "e"),
-    key("∫", "\\int #0\\,dx", "integral"),
+    // FIX (auditoría Fase 0 v2, Fase 10): la tecla ∫ (y "Lim" más abajo)
+    // insertaba \int/\lim, que ni preprocessLatex ni el backend (spec:
+    // "∫ NO se normaliza"; ast_validator: Integral/Sum/Limit en
+    // BLOCKED_NODE_TYPES, decisión de seguridad deliberada) sabían
+    // resolver — a diferencia de la Lite, aquí no se puede resolver
+    // inline sin pelear contra esa decisión de seguridad, y no hay modo
+    // dedicado de Límite/Serie a donde redirigir. Decisión de Carlos:
+    // quitar la tecla por ahora, no dejarla rota. Reemplazada por una
+    // variable "x" simple (útil, sin el mismo problema).
+    key("x", "x", "variable x"),
     key({ frac: [BOX, BOX] }, "\\frac{#0}{#1}", "fracción"),
   ],
   [
@@ -50,7 +59,7 @@ const BASE_GRID: KeyDef[][] = [
   ],
   [
     key({ italic: "i" }, "i", "número imaginario"),
-    key("Lim", "\\lim_{#0}", "límite"),
+    key("θ", "\\theta", "theta"),
     key("=", "=", "igual"),
     key("f(x)=0", "#0=0", "resolver ecuación"),
     key("⌫", "", "borrar"),
@@ -132,16 +141,11 @@ const CATEGORY_MENUS: Record<string, { section: string; keys: KeyDef[] }[]> = {
   Clcs: [
     {
       section: "Continuo",
-      keys: [
-        key({ frac: ["d", "dx"] }, "\\frac{d}{dx}\\left(#0\\right)", "derivada"),
-        key("∫", "\\int #0\\,dx", "integral"),
-        key("Lim", "\\lim_{#0}#1", "límite"),
-      ],
+      keys: [key({ frac: ["d", "dx"] }, "\\frac{d}{dx}\\left(#0\\right)", "derivada")],
     },
     {
       section: "Discreto",
       keys: [
-        key("Σ", "\\sum_{#0}^{#1}#2", "sumatoria"),
         key({ italic: "x" }, "x", "variable x"),
         key({ italic: "y" }, "y", "variable y"),
       ],
