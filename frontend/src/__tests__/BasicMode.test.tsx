@@ -32,11 +32,13 @@ vi.mock("../components/NaturalMathField", () => ({
 }));
 
 import { callApi } from "../api/client";
+import { useUIStore } from "../store/useUIStore";
 
 const mockedCallApi = vi.mocked(callApi);
 
 beforeEach(() => {
   mockedCallApi.mockReset();
+  useUIStore.setState({ activeMode: "basic" });
   mockedCallApi.mockResolvedValue({
     success: true,
     operation: "evaluate",
@@ -89,5 +91,21 @@ describe("BasicMode", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("no puede estar vacía");
     expect(mockedCallApi).not.toHaveBeenCalled();
+  });
+
+  // Fase 0 v2 (decisión de Carlos): d/dx ya no se resuelve inline en
+  // Básica — Derivative está bloqueado a nivel de seguridad en el backend
+  // (antes de este fix, insertaba \frac{d}{dx}(...) que el backend
+  // interpretaba como símbolos sueltos y daba una respuesta incorrecta
+  // SIN error). Ahora navega al modo Derivada en vez de insertar nada.
+  it('la tecla "derivada" del teclado navega al modo Derivada en vez de insertar texto', () => {
+    render(<BasicMode />);
+
+    expect(useUIStore.getState().activeMode).toBe("basic");
+    fireEvent.click(screen.getByLabelText("derivada"));
+    expect(useUIStore.getState().activeMode).toBe("derivative");
+
+    // no debe haber insertado nada en el campo de expresión
+    expect(screen.getByLabelText("Expresión")).toHaveValue("");
   });
 });
