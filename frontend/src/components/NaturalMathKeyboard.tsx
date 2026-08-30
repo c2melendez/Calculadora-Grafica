@@ -161,9 +161,23 @@ interface NaturalMathKeyboardProps {
   onSolveEquation?: () => void;
   onSolveSystem?: () => void;
   onSimplify?: () => void;
+  /** Fase 0 v2 (decisión de Carlos): d/dx en la rejilla base no se resuelve
+   * inline — Derivative está bloqueado a nivel de seguridad en el backend
+   * (ast_validator.py, BLOCKED_NODE_TYPES). En vez de insertar la
+   * plantilla LaTeX (que antes daba un resultado incorrecto en silencio,
+   * ver normalize.ts de precision-lab-lite para el mismo hallazgo), esta
+   * tecla navega al modo Derivada, que sí lo resuelve de verdad. */
+  onGoToDerivative?: () => void;
 }
 
-export function NaturalMathKeyboard({ field, onSubmit, onSolveEquation, onSolveSystem, onSimplify }: NaturalMathKeyboardProps) {
+export function NaturalMathKeyboard({
+  field,
+  onSubmit,
+  onSolveEquation,
+  onSolveSystem,
+  onSimplify,
+  onGoToDerivative,
+}: NaturalMathKeyboardProps) {
   const [openCategory, setOpenCategory] = useState<(typeof CATEGORIES)[number] | null>(null);
 
   function press(k: KeyDef): void {
@@ -188,6 +202,7 @@ export function NaturalMathKeyboard({ field, onSubmit, onSolveEquation, onSolveS
     // misma distinción de la Fase 1/2, se preserva aquí.
     if (k.glyph === "=" && k.insertLatex === "") return onSubmit?.();
     if (k.glyph === "f(x)=0") return onSolveEquation ? onSolveEquation() : press(k);
+    if (k.ariaLabel === "derivada") return onGoToDerivative ? onGoToDerivative() : press(k);
     press(k);
   }
 
@@ -203,7 +218,7 @@ export function NaturalMathKeyboard({ field, onSubmit, onSolveEquation, onSolveS
                   <button
                     key={`${group.section}-${i}`}
                     type="button"
-                    onClick={() => press(k)}
+                    onClick={() => (k.ariaLabel === "derivada" ? (onGoToDerivative ? onGoToDerivative() : press(k)) : press(k))}
                     aria-label={k.ariaLabel}
                     className="rounded-md bg-marker-soft/10 py-2 text-sm text-marker hover:bg-marker-soft/20"
                   >
