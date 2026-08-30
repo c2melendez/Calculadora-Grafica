@@ -38,6 +38,7 @@ export function BasicMode() {
   const setLoading = useUIStore((state) => state.setLoading);
   const setErrorMessage = useUIStore((state) => state.setErrorMessage);
   const isLoading = useUIStore((state) => state.isLoading);
+  const setActiveMode = useUIStore((state) => state.setActiveMode);
 
   function addSubstitutionRow(): void {
     setSubstitutions((rows) => [...rows, { name: "", value: "" }]);
@@ -115,7 +116,11 @@ export function BasicMode() {
         </p>
       )}
 
-      <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
+      <NaturalMathKeyboard
+        field={mathField}
+        onSubmit={() => formRef.current?.requestSubmit()}
+        onGoToDerivative={() => setActiveMode("derivative")}
+      />
 
       <div className="flex flex-wrap gap-2">
         <span className="pt-1.5 text-xs font-medium text-muted">Ejemplos:</span>
