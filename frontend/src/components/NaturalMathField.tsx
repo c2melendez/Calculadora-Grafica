@@ -49,10 +49,52 @@ function rewriteNthRoot(ascii: string): string {
   return result;
 }
 
+/**
+ * Fase 10 (auditoría Fase 0 v2): `convertLatexToAsciiMath` no colapsa
+ * \mathrm{nombre} en un solo identificador — lo deletrea como letras
+ * sueltas separadas por espacio (ej. \mathrm{mean} -> "m e a n"), que es
+ * exactamente como LaTeX trata cualquier secuencia de letras en modo
+ * matemático sin \mathrm/\operatorname (variables itálicas individuales
+ * multiplicándose entre sí) — confirmado que ni \mathrm ni \operatorname
+ * evitan esto en esta librería. Antes de este fix, cualquier tecla del
+ * teclado que usa \mathrm{...} (mean/median/mode/stdev/var/mad/sort/mod/
+ * lcm/nCr/nPr — el menú "Stat" casi completo) llegaba al backend como
+ * variables sueltas sin sentido, no como el nombre de función esperado.
+ *
+ * Se recolapsan aquí, por nombre exacto y con case sensitivity (por eso
+ * "nCr"/"nPr" van explícitos, no derivados de un patrón genérico) —
+ * deliberadamente NO se usa un regex genérico de "letras sueltas seguidas
+ * de paréntesis" porque eso colapsaría también multiplicación implícita
+ * legítima entre variables de una letra (ej. "x y(z)").
+ */
+const KNOWN_MULTI_LETTER_FUNCTION_NAMES = [
+  "median",
+  "stdev",
+  "mean",
+  "mode",
+  "sort",
+  "mad",
+  "mod",
+  "lcm",
+  "nCr",
+  "nPr",
+  "var",
+];
+
+function collapseKnownFunctionNames(ascii: string): string {
+  let result = ascii;
+  for (const name of KNOWN_MULTI_LETTER_FUNCTION_NAMES) {
+    const spelled = name.split("").join("\\s+");
+    const pattern = new RegExp(`\\b${spelled}\\s*\\(`, "g");
+    result = result.replace(pattern, `${name}(`);
+  }
+  return result;
+}
+
 export function latexToBackendSyntax(latex: string): string {
   if (latex.trim() === "") return "";
   const ascii = convertLatexToAsciiMath(latex);
-  return rewriteNthRoot(ascii).trim();
+  return collapseKnownFunctionNames(rewriteNthRoot(ascii)).trim();
 }
 
 interface NaturalMathFieldProps {
@@ -61,6 +103,12 @@ interface NaturalMathFieldProps {
   ariaLabel: string;
   placeholder?: string;
   fieldRef?: (el: MathfieldElement | null) => void;
+  /** Fase E: quita fondo/borde/sombra propios cuando el campo vive
+   * anidado dentro de CalculatorScreen.tsx, que ya provee el contenedor
+   * "pantalla" único (mismo criterio que NaturalInput.tsx en Lite). El
+   * uso standalone original (con su propia píldora) se conserva cuando
+   * `bare` no se pasa. */
+  bare?: boolean;
 }
 
 export function NaturalMathField({
@@ -69,6 +117,7 @@ export function NaturalMathField({
   ariaLabel,
   placeholder,
   fieldRef,
+  bare = false,
 }: NaturalMathFieldProps) {
   const elRef = useRef<MathfieldElement | null>(null);
   const fieldId = useId();
@@ -105,7 +154,11 @@ export function NaturalMathField({
       math-virtual-keyboard-policy="manual"
       aria-label={ariaLabel}
       placeholder={placeholder}
-      className="w-full rounded-full border border-paper-line bg-paper-soft px-5 py-2.5 text-base text-ink shadow-sm"
+      className={
+        bare
+          ? "w-full bg-transparent px-0 py-1 pr-10 text-right text-2xl text-ink"
+          : "w-full rounded-full border border-paper-line bg-paper-soft px-5 py-2.5 text-base text-ink shadow-sm"
+      }
       style={
         {
           display: "block",
