@@ -10,9 +10,9 @@ import type { MathfieldElement } from "mathlive";
 import type { MathResponse } from "../api/client";
 import { submitAndRecord } from "../api/submitWithHistory";
 import { useUIStore } from "../store/useUIStore";
-import { latexToBackendSyntax, NaturalMathField } from "./NaturalMathField";
+import { CalculatorScreen } from "./CalculatorScreen";
+import { latexToBackendSyntax } from "./NaturalMathField";
 import { NaturalMathKeyboard } from "./NaturalMathKeyboard";
-import { ResultPanel } from "./ResultPanel";
 
 interface SubstitutionRow {
   name: string;
@@ -98,29 +98,22 @@ export function BasicMode() {
         Básico
       </h2>
 
-      <div>
-        <div className="relative">
-          <NaturalMathField
-            latex={latex}
-            onLatexChange={setLatex}
-            ariaLabel="Expresión"
-            placeholder="2x + √9"
-            fieldRef={setMathField}
-          />
-          <button
-            type="submit"
-            aria-label="Evaluar"
-            className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-graph text-white hover:bg-graph/90"
-          >
-            →
-          </button>
-        </div>
-        {validationError && (
-          <p role="alert" className="mt-1 px-2 text-sm text-red-600">
-            {validationError}
-          </p>
-        )}
-      </div>
+      <CalculatorScreen
+        latex={latex}
+        onLatexChange={setLatex}
+        ariaLabel="Expresión"
+        placeholder="2x + √9"
+        fieldRef={setMathField}
+        angleUnit={angleUnit}
+        onToggleAngleUnit={() => setAngleUnit((u) => (u === "rad" ? "deg" : "rad"))}
+        result={lastResult}
+        isLoading={isLoading}
+      />
+      {validationError && (
+        <p role="alert" className="-mt-4 px-2 text-sm text-red-600">
+          {validationError}
+        </p>
+      )}
 
       <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
 
@@ -140,7 +133,7 @@ export function BasicMode() {
 
       <details className="group rounded-lg border border-paper-line bg-paper-soft open:pb-3">
         <summary className="cursor-pointer list-none px-4 py-2.5 text-sm font-medium text-muted marker:content-none">
-          Opciones avanzadas (sustituciones, unidad angular)
+          Opciones avanzadas (sustituciones)
         </summary>
         <div className="space-y-4 px-4 pt-1">
           <div className="space-y-2">
@@ -177,29 +170,8 @@ export function BasicMode() {
               + Añadir sustitución
             </button>
           </div>
-
-          <div className="space-y-1">
-            <label htmlFor="basic-angle-unit" className="block text-sm text-muted">
-              Unidad angular
-            </label>
-            <select
-              id="basic-angle-unit"
-              value={angleUnit}
-              onChange={(e) => setAngleUnit(e.target.value as "rad" | "deg")}
-              className="rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm text-ink"
-            >
-              <option value="rad">Radianes</option>
-              <option value="deg">Grados</option>
-            </select>
-          </div>
         </div>
       </details>
-
-      {(isLoading || lastResult) && (
-        <div className="rounded-lg border border-paper-line bg-paper-soft p-4 shadow-sm">
-          <ResultPanel result={lastResult} isLoading={isLoading} />
-        </div>
-      )}
     </form>
   );
 }
