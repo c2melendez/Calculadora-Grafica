@@ -249,3 +249,66 @@ def test_result_latex_truncated_when_too_long(monkeypatch):
     assert body["success"] is True
     assert body["result_latex"] is None
     assert any("10,000" in w for w in body["warnings"])
+
+
+# ---------------------------------------------------------------------------
+# Fase 10 (auditoría Fase 0 v2, port de precision-lab-lite): funciones de
+# estadística/combinatoria registradas en ALLOWED_FUNCTIONS — antes de esto,
+# min/max estaban BLOQUEADOS como identificadores prohibidos y el resto del
+# menú "Stat" del teclado (mean/median/mode/range/stdev/variance/mad/mod/
+# gcd/lcm/nCr/nPr) ni siquiera existía como función reconocida.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "expression,expected",
+    [
+        ("mean(1,2,3)", 2.0),
+        ("median(1,2,3,4)", 2.5),
+        ("mode(1,2,2,3)", 2.0),
+        ("min(5,1,3)", 1.0),
+        ("max(5,1,3)", 5.0),
+        ("range(1,2,9)", 8.0),
+        ("stdev(2,4,6)", 2.0),
+        ("variance(2,4,6)", 4.0),
+        ("var(2,4,6)", 4.0),  # alias real: la tecla del teclado inserta \mathrm{var}
+        ("mad(1,2,3)", 2 / 3),
+        ("mod(7,3)", 1.0),
+        ("gcd(12,18)", 6.0),
+        ("lcm(4,6)", 12.0),
+        ("nCr(5,2)", 10.0),
+        ("nPr(5,2)", 20.0),
+    ],
+)
+def test_stat_and_combinatorics_functions(expression, expected):
+    response = _evaluate(expression=expression)
+    body = response.json()
+    assert body["success"] is True
+    assert body["result_approx"] == pytest.approx(expected)
+
+
+def test_min_and_max_no_longer_blocked_identifiers():
+    # Antes de Fase 10: BLOCKED_IDENTIFIERS incluía "min"/"max" (son
+    # builtins de Python) por no estar todavía en ALLOWED_FUNCTIONS —
+    # producían PARSE_ERROR, no solo "sin evaluar".
+    for expression in ("min(1,2)", "max(1,2)"):
+        response = _evaluate(expression=expression)
+        body = response.json()
+        assert body["success"] is True, f"{expression}: {body}"
+
+
+def test_stat_functions_stay_symbolic_with_free_variables():
+    response = _evaluate(expression="mean(x,1)")
+    body = response.json()
+    assert body["success"] is True
+    assert body["result_approx"] is None  # simbólico, no numérico
+
+
+def test_stdev_with_single_value_is_parse_error():
+    # stdev/variance necesitan al menos 2 valores (decisión documentada en
+    # stat_functions.py) — con uno solo, Mean.eval levanta ValueError,
+    # que _parse_side envuelve como ParseSecurityError -> PARSE_ERROR.
+    response = _evaluate(expression="stdev(5)")
+    body = response.json()
+    assert body["success"] is False
+    assert body["error_code"] == "PARSE_ERROR"
