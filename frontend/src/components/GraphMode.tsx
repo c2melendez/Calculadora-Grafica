@@ -123,6 +123,7 @@ function Graph2DForm() {
   const setLoading = useUIStore((state) => state.setLoading);
   const setErrorMessage = useUIStore((state) => state.setErrorMessage);
   const isLoading = useUIStore((state) => state.isLoading);
+  const setActiveMode = useUIStore((state) => state.setActiveMode);
 
   function updateExpression(index: number, value: string): void {
     setLatexRows((current) => current.map((expr, i) => (i === index ? value : expr)));
@@ -248,6 +249,7 @@ function Graph2DForm() {
         <NaturalMathKeyboard
           field={mathFields[activeRow] ?? null}
           onSubmit={() => formRef.current?.requestSubmit()}
+          onGoToDerivative={() => setActiveMode("derivative")}
         />
       </div>
 
@@ -352,6 +354,7 @@ function Graph3DForm() {
   const setLoading = useUIStore((state) => state.setLoading);
   const setErrorMessage = useUIStore((state) => state.setErrorMessage);
   const isLoading = useUIStore((state) => state.isLoading);
+  const setActiveMode = useUIStore((state) => state.setActiveMode);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -399,7 +402,11 @@ function Graph3DForm() {
           placeholder="x^2+y^2"
           fieldRef={setMathField}
         />
-        <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
+        <NaturalMathKeyboard
+          field={mathField}
+          onSubmit={() => formRef.current?.requestSubmit()}
+          onGoToDerivative={() => setActiveMode("derivative")}
+        />
       </div>
 
       <div className="flex flex-wrap gap-4">
@@ -513,6 +520,7 @@ function GraphParametricForm() {
   const setLoading = useUIStore((state) => state.setLoading);
   const setErrorMessage = useUIStore((state) => state.setErrorMessage);
   const isLoading = useUIStore((state) => state.isLoading);
+  const setActiveMode = useUIStore((state) => state.setActiveMode);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -606,6 +614,7 @@ function GraphParametricForm() {
         <NaturalMathKeyboard
           field={activeField === "x" ? xMathField : yMathField}
           onSubmit={() => formRef.current?.requestSubmit()}
+          onGoToDerivative={() => setActiveMode("derivative")}
         />
       </div>
 
