@@ -141,7 +141,7 @@ export default function App() {
           </section>
         )}
 
-        <section aria-live="polite" aria-label="Resultado">
+        <section aria-live="polite" aria-label="Resultado" className="mx-auto max-w-md">
           <ErrorBoundary fallbackLabel="No se pudo mostrar el resultado.">
             <ActiveModeForm mode={activeMode} />
           </ErrorBoundary>
