@@ -28,6 +28,7 @@ export function EquationMode() {
   const setLoading = useUIStore((state) => state.setLoading);
   const setErrorMessage = useUIStore((state) => state.setErrorMessage);
   const isLoading = useUIStore((state) => state.isLoading);
+  const setActiveMode = useUIStore((state) => state.setActiveMode);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -86,7 +87,11 @@ export function EquationMode() {
           placeholder="2x+1=5  (o  x+3>0 para desigualdades)"
           fieldRef={setMathField}
         />
-        <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
+        <NaturalMathKeyboard
+          field={mathField}
+          onSubmit={() => formRef.current?.requestSubmit()}
+          onGoToDerivative={() => setActiveMode("derivative")}
+        />
         <p className="px-1 text-xs text-muted" role="note">
           Escribe = para resolver una ecuación, o &lt;, &gt;, ≤, ≥ para una desigualdad — se
           detecta automáticamente.
