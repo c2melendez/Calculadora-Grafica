@@ -21,17 +21,23 @@ from sympy import (
     Float,
     I,
     Integer,
+    Max,
+    Min,
+    Mod,
     Mul,
     Pow,
     Symbol,
     acos,
     asin,
     atan,
+    binomial,
     cos,
     cosh,
     cot,
     csc,
     exp,
+    gcd,
+    lcm,
     log,
     oo,
     pi,
@@ -43,12 +49,15 @@ from sympy import (
     tan,
     tanh,
 )
+from sympy.functions.combinatorial.factorials import FallingFactorial
 from sympy.parsing.sympy_parser import (
     convert_xor,
     implicit_multiplication_application,
     parse_expr,
     standard_transformations,
 )
+
+from app.services.stat_functions import Mad, Mean, Median, Mode, Range, Stdev, Variance
 
 MAX_EXPRESSION_LENGTH = 500
 MIN_EXPRESSION_LENGTH = 1
@@ -85,6 +94,35 @@ ALLOWED_FUNCTIONS = {
     "exp": exp,
     "abs": Abs,
     "sign": sign,
+    # Fase 10 (auditoría Fase 0 v2, port de precision-lab-lite): estas 15
+    # claves NUNCA estaban aquí — de las 10 teclas del menú "Stat" del
+    # teclado, antes de esto solo "n!" (factorial, ya soportado vía
+    # ast_validator/sympy en otro punto) funcionaba; "min"/"max" ni
+    # siquiera llegaban a fallar limpio, estaban BLOQUEADOS como
+    # identificadores prohibidos (ver BLOCKED_IDENTIFIERS abajo, que resta
+    # automáticamente las claves de este diccionario). min/max/gcd/lcm/mod
+    # /nCr/nPr son nativos de SymPy (Min/Max/gcd/lcm/Mod/binomial/
+    # FallingFactorial) — solo faltaba registrarlos. mean/median/mode/
+    # range/stdev/variance/mad no existen en SymPy — se definen en
+    # stat_functions.py, mismo criterio de evaluación (n-1 muestral para
+    # stdev/variance) que su equivalente en la Lite. "sort" NO se portó
+    # (ver stat_functions.py, no encaja en el contrato escalar de
+    # /evaluate sin cambios más profundos).
+    "min": Min,
+    "max": Max,
+    "range": Range,
+    "mean": Mean,
+    "median": Median,
+    "mode": Mode,
+    "stdev": Stdev,
+    "variance": Variance,
+    "var": Variance,  # alias real: la tecla del teclado inserta \mathrm{var}
+    "mad": Mad,
+    "mod": Mod,
+    "gcd": gcd,
+    "lcm": lcm,
+    "nCr": binomial,
+    "nPr": FallingFactorial,
 }
 ALLOWED_CONSTANTS = {"pi": pi, "e": E, "E": E, "i": I, "I": I, "oo": oo}
 
