@@ -29,6 +29,7 @@ export function IntegralMode() {
   const setLoading = useUIStore((state) => state.setLoading);
   const setErrorMessage = useUIStore((state) => state.setErrorMessage);
   const isLoading = useUIStore((state) => state.isLoading);
+  const setActiveMode = useUIStore((state) => state.setActiveMode);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -98,7 +99,11 @@ export function IntegralMode() {
           placeholder="x^2"
           fieldRef={setMathField}
         />
-        <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
+        <NaturalMathKeyboard
+          field={mathField}
+          onSubmit={() => formRef.current?.requestSubmit()}
+          onGoToDerivative={() => setActiveMode("derivative")}
+        />
       </div>
 
       <div className="flex gap-4">
