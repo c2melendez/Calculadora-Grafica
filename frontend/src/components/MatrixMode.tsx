@@ -213,7 +213,7 @@ export function MatrixMode() {
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-labelledby="matrix-mode-heading" className="space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm">
+    <form onSubmit={handleSubmit} aria-labelledby="matrix-mode-heading" className="space-y-4 rounded-lg border border-paper-line p-5 shadow-sm">
       <h2 id="matrix-mode-heading" className="text-sm font-medium text-muted">
         Matrices
       </h2>
@@ -297,7 +297,7 @@ export function MatrixMode() {
         Calcular
       </button>
 
-      <div className="border-t border-paper-line pt-4">
+      <div className="rounded-xl bg-paper-soft px-4 py-3 shadow-inner shadow-black/10">
         <ResultPanel result={lastResult} isLoading={isLoading} />
       </div>
     </form>
