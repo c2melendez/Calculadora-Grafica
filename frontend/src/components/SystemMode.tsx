@@ -100,7 +100,7 @@ export function SystemMode() {
       ref={formRef}
       onSubmit={handleSubmit}
       aria-labelledby="system-mode-heading"
-      className="space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm"
+      className="space-y-4 rounded-lg border border-paper-line p-5 shadow-sm"
     >
       <h2 id="system-mode-heading" className="text-sm font-medium text-muted">
         Sistema de ecuaciones
@@ -198,7 +198,7 @@ export function SystemMode() {
         Resolver sistema
       </button>
 
-      <div className="border-t border-paper-line pt-4">
+      <div className="rounded-xl bg-paper-soft px-4 py-3 shadow-inner shadow-black/10">
         <ResultPanel result={lastResult} isLoading={isLoading} />
       </div>
     </form>
