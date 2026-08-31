@@ -150,6 +150,46 @@ describe("BasicMode", () => {
     expect(mockedCallApi).not.toHaveBeenCalled();
   });
 
+  // Fase 2: handleSubmit gana detección de derivada/integral en notación
+  // natural — ver calculusIntent.ts para la explicación completa de por
+  // qué esto toca (sin reabrir) la decisión de seguridad "Fase 0 v2".
+  // Estos tests confirman que se llama al endpoint DEDICADO
+  // (/derivative, /integral) con la sub-expresión LIMPIA — nunca el
+  // string \frac{d}{dx}(...) / \int...dx completo, que es justo lo que
+  // el validador de AST del backend bloquearía si llegara a /evaluate.
+  it("enruta a /derivative con la sub-expresión limpia (no el template completo)", async () => {
+    render(<BasicMode />);
+    fireEvent.change(screen.getByLabelText("Expresión"), {
+      target: { value: "\\frac{d}{dx}\\left(x^2+3x\\right)" },
+    });
+    fireEvent.submit(screen.getByRole("button", { name: "Evaluar" }).closest("form")!);
+
+    await waitFor(() => expect(mockedCallApi).toHaveBeenCalled());
+
+    expect(mockedCallApi).toHaveBeenCalledWith("/derivative", {
+      expression: "x^2+3x",
+      variable: "x",
+      order: 1,
+    });
+  });
+
+  it("enruta a /integral con la sub-expresión limpia y los límites como string", async () => {
+    render(<BasicMode />);
+    fireEvent.change(screen.getByLabelText("Expresión"), {
+      target: { value: "\\int_{0}^{1} x^2\\,dx" },
+    });
+    fireEvent.submit(screen.getByRole("button", { name: "Evaluar" }).closest("form")!);
+
+    await waitFor(() => expect(mockedCallApi).toHaveBeenCalled());
+
+    expect(mockedCallApi).toHaveBeenCalledWith("/integral", {
+      expression: "x^2",
+      variable: "x",
+      lower_bound: "0",
+      upper_bound: "1",
+    });
+  });
+
   // Fase 0 v2 (decisión de Carlos): d/dx ya no se resuelve inline en
   // Básica — Derivative está bloqueado a nivel de seguridad en el backend
   // (antes de este fix, insertaba \frac{d}{dx}(...) que el backend
