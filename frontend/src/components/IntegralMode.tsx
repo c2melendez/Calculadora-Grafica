@@ -9,9 +9,9 @@ import { useRef, useState, type FormEvent } from "react";
 import type { MathResponse } from "../api/client";
 import { submitAndRecord } from "../api/submitWithHistory";
 import { useUIStore } from "../store/useUIStore";
-import { latexToBackendSyntax, NaturalMathField } from "./NaturalMathField";
+import { CalculatorScreen } from "./CalculatorScreen";
+import { latexToBackendSyntax } from "./NaturalMathField";
 import { NaturalMathKeyboard } from "./NaturalMathKeyboard";
-import { ResultPanel } from "./ResultPanel";
 import type { MathfieldElement } from "mathlive";
 
 const INFINITE_BOUND_PATTERN = /^-?oo$/;
@@ -86,25 +86,25 @@ export function IntegralMode() {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="integral-mode-heading" className="space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm">
+    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="integral-mode-heading" className="space-y-4 rounded-lg border border-paper-line p-5 shadow-sm">
       <h2 id="integral-mode-heading" className="text-sm font-medium text-muted">
         Integral
       </h2>
 
-      <div className="space-y-1">
-        <NaturalMathField
-          latex={latex}
-          onLatexChange={setLatex}
-          ariaLabel="Expresión"
-          placeholder="x^2"
-          fieldRef={setMathField}
-        />
-        <NaturalMathKeyboard
-          field={mathField}
-          onSubmit={() => formRef.current?.requestSubmit()}
-          onGoToDerivative={() => setActiveMode("derivative")}
-        />
-      </div>
+      <CalculatorScreen
+        latex={latex}
+        onLatexChange={setLatex}
+        ariaLabel="Expresión"
+        placeholder="x^2"
+        fieldRef={setMathField}
+        result={lastResult}
+        isLoading={isLoading}
+      />
+      <NaturalMathKeyboard
+        field={mathField}
+        onSubmit={() => formRef.current?.requestSubmit()}
+        onGoToDerivative={() => setActiveMode("derivative")}
+      />
 
       <div className="flex gap-4">
         <div className="space-y-1">
@@ -157,10 +157,6 @@ export function IntegralMode() {
       >
         Integrar
       </button>
-
-      <div className="border-t border-paper-line pt-4">
-        <ResultPanel result={lastResult} isLoading={isLoading} />
-      </div>
     </form>
   );
 }
