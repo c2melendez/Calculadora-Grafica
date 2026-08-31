@@ -93,6 +93,63 @@ describe("BasicMode", () => {
     expect(mockedCallApi).not.toHaveBeenCalled();
   });
 
+  // Fase 1 (fusión de modos): handleSubmit antes SIEMPRE llamaba a
+  // /evaluate. Ahora enruta según el contenido — estos 3 tests cubren las
+  // ramas nuevas, reusando el mismo mock de NaturalMathField (que ya deja
+  // pasar el valor tal cual, sin convertir LaTeX real).
+  it("enruta a /solve cuando el campo tiene un signo = (antes iba a /evaluate)", async () => {
+    render(<BasicMode />);
+    fireEvent.change(screen.getByLabelText("Expresión"), { target: { value: "2x+3=7" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Evaluar" }).closest("form")!);
+
+    await waitFor(() => expect(mockedCallApi).toHaveBeenCalled());
+
+    expect(mockedCallApi).toHaveBeenCalledWith("/solve", {
+      equation: "2x+3=7",
+      angle_unit: "rad",
+    });
+  });
+
+  it("enruta a /inequality cuando el campo tiene < o >", async () => {
+    render(<BasicMode />);
+    fireEvent.change(screen.getByLabelText("Expresión"), { target: { value: "x+3>0" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Evaluar" }).closest("form")!);
+
+    await waitFor(() => expect(mockedCallApi).toHaveBeenCalled());
+
+    expect(mockedCallApi).toHaveBeenCalledWith("/inequality", { inequality: "x+3>0" });
+  });
+
+  it("enruta a /solve/system cuando el campo tiene un entorno \\begin{cases}", async () => {
+    render(<BasicMode />);
+    fireEvent.change(screen.getByLabelText("Expresión"), {
+      target: { value: "\\begin{cases}2x+y=5\\\\x-y=1\\end{cases}" },
+    });
+    fireEvent.submit(screen.getByRole("button", { name: "Evaluar" }).closest("form")!);
+
+    await waitFor(() => expect(mockedCallApi).toHaveBeenCalled());
+
+    expect(mockedCallApi).toHaveBeenCalledWith("/solve/system", {
+      equations: ["2x+y=5", "x-y=1"],
+      variables: ["x", "y"],
+    });
+  });
+
+  it("valida que el número de variables del sistema coincida con el de ecuaciones", async () => {
+    render(<BasicMode />);
+    fireEvent.change(screen.getByLabelText("Expresión"), {
+      target: { value: "\\begin{cases}x+y+z=6\\\\x-y=0\\\\z=3\\end{cases}" },
+    });
+    // El valor por defecto del campo de variables es "x, y" (2), pero el
+    // sistema tiene 3 ecuaciones.
+    fireEvent.submit(screen.getByRole("button", { name: "Evaluar" }).closest("form")!);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "El número de variables (2) debe coincidir con el de ecuaciones (3)",
+    );
+    expect(mockedCallApi).not.toHaveBeenCalled();
+  });
+
   // Fase 0 v2 (decisión de Carlos): d/dx ya no se resuelve inline en
   // Básica — Derivative está bloqueado a nivel de seguridad en el backend
   // (antes de este fix, insertaba \frac{d}{dx}(...) que el backend
