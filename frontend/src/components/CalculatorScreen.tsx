@@ -37,8 +37,11 @@ interface CalculatorScreenProps {
   ariaLabel: string;
   placeholder?: string;
   fieldRef?: (el: MathfieldElement | null) => void;
-  angleUnit: "rad" | "deg";
-  onToggleAngleUnit: () => void;
+  /** Opcional: algunos backends (derivada, integral, sistemas, matrices)
+   * no tienen concepto de unidad angular — omitir ambas props oculta el
+   * badge en vez de mostrar un toggle que no afectaría nada real. */
+  angleUnit?: "rad" | "deg";
+  onToggleAngleUnit?: () => void;
   result: MathResponse | null;
   isLoading: boolean;
 }
@@ -63,16 +66,18 @@ export function CalculatorScreen({
 
   return (
     <div className="rounded-xl bg-paper-soft px-4 py-3 shadow-inner shadow-black/10">
-      <div className="mb-1.5 flex justify-end">
-        <button
-          type="button"
-          onClick={onToggleAngleUnit}
-          aria-label={`Unidad angular: ${angleUnit === "rad" ? "radianes" : "grados"}. Cambiar.`}
-          className="rounded-md bg-marker-soft px-2 py-1 text-[10px] font-semibold text-marker-text hover:bg-marker-soft/70"
-        >
-          {angleUnit === "rad" ? "RAD" : "DEG"}
-        </button>
-      </div>
+      {angleUnit && onToggleAngleUnit && (
+        <div className="mb-1.5 flex justify-end">
+          <button
+            type="button"
+            onClick={onToggleAngleUnit}
+            aria-label={`Unidad angular: ${angleUnit === "rad" ? "radianes" : "grados"}. Cambiar.`}
+            className="rounded-md bg-marker-soft px-2 py-1 text-[10px] font-semibold text-marker-text hover:bg-marker-soft/70"
+          >
+            {angleUnit === "rad" ? "RAD" : "DEG"}
+          </button>
+        </div>
+      )}
 
       {recentEntries.length > 0 && (
         <div className="mb-2 flex max-h-24 flex-col gap-1.5 overflow-y-auto border-b border-paper-line pb-2">
