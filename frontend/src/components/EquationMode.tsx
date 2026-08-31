@@ -9,9 +9,9 @@ import { useRef, useState, type FormEvent } from "react";
 import type { MathResponse } from "../api/client";
 import { submitAndRecord } from "../api/submitWithHistory";
 import { useUIStore } from "../store/useUIStore";
-import { latexToBackendSyntax, NaturalMathField } from "./NaturalMathField";
+import { CalculatorScreen } from "./CalculatorScreen";
+import { latexToBackendSyntax } from "./NaturalMathField";
 import { NaturalMathKeyboard } from "./NaturalMathKeyboard";
-import { ResultPanel } from "./ResultPanel";
 import type { MathfieldElement } from "mathlive";
 
 const INEQUALITY_OPERATOR_PATTERN = /[<>]/;
@@ -74,29 +74,31 @@ export function EquationMode() {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="equation-mode-heading" className="space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm">
+    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="equation-mode-heading" className="space-y-4 rounded-lg border border-paper-line p-5 shadow-sm">
       <h2 id="equation-mode-heading" className="text-sm font-medium text-muted">
         Ecuación
       </h2>
 
-      <div className="space-y-1">
-        <NaturalMathField
-          latex={latex}
-          onLatexChange={setLatex}
-          ariaLabel="Ecuación"
-          placeholder="2x+1=5  (o  x+3>0 para desigualdades)"
-          fieldRef={setMathField}
-        />
-        <NaturalMathKeyboard
-          field={mathField}
-          onSubmit={() => formRef.current?.requestSubmit()}
-          onGoToDerivative={() => setActiveMode("derivative")}
-        />
-        <p className="px-1 text-xs text-muted" role="note">
-          Escribe = para resolver una ecuación, o &lt;, &gt;, ≤, ≥ para una desigualdad — se
-          detecta automáticamente.
-        </p>
-      </div>
+      <CalculatorScreen
+        latex={latex}
+        onLatexChange={setLatex}
+        ariaLabel="Ecuación"
+        placeholder="2x+1=5  (o  x+3>0 para desigualdades)"
+        fieldRef={setMathField}
+        angleUnit={angleUnit}
+        onToggleAngleUnit={() => setAngleUnit((u) => (u === "rad" ? "deg" : "rad"))}
+        result={lastResult}
+        isLoading={isLoading}
+      />
+      <NaturalMathKeyboard
+        field={mathField}
+        onSubmit={() => formRef.current?.requestSubmit()}
+        onGoToDerivative={() => setActiveMode("derivative")}
+      />
+      <p className="px-1 text-xs text-muted" role="note">
+        Escribe = para resolver una ecuación, o &lt;, &gt;, ≤, ≥ para una desigualdad — se
+        detecta automáticamente.
+      </p>
 
       <div className="space-y-1">
         <label htmlFor="equation-variable" className="block text-sm text-muted">
@@ -116,21 +118,6 @@ export function EquationMode() {
         </p>
       </div>
 
-      <div className="space-y-1">
-        <label htmlFor="equation-angle-unit" className="block text-sm text-muted">
-          Unidad angular
-        </label>
-        <select
-          id="equation-angle-unit"
-          value={angleUnit}
-          onChange={(e) => setAngleUnit(e.target.value as "rad" | "deg")}
-          className="rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
-        >
-          <option value="rad">Radianes</option>
-          <option value="deg">Grados</option>
-        </select>
-      </div>
-
       {validationError && (
         <p role="alert" className="text-sm text-red-600">
           {validationError}
@@ -143,10 +130,6 @@ export function EquationMode() {
       >
         Resolver
       </button>
-
-      <div className="border-t border-paper-line pt-4">
-        <ResultPanel result={lastResult} isLoading={isLoading} />
-      </div>
     </form>
   );
 }
