@@ -8,9 +8,9 @@ import { useRef, useState, type FormEvent } from "react";
 import type { MathResponse } from "../api/client";
 import { submitAndRecord } from "../api/submitWithHistory";
 import { useUIStore } from "../store/useUIStore";
-import { latexToBackendSyntax, NaturalMathField } from "./NaturalMathField";
+import { CalculatorScreen } from "./CalculatorScreen";
+import { latexToBackendSyntax } from "./NaturalMathField";
 import { NaturalMathKeyboard } from "./NaturalMathKeyboard";
-import { ResultPanel } from "./ResultPanel";
 import type { MathfieldElement } from "mathlive";
 
 export function DerivativeMode() {
@@ -108,7 +108,7 @@ export function DerivativeMode() {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="derivative-mode-heading" className="space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm">
+    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="derivative-mode-heading" className="space-y-4 rounded-lg border border-paper-line p-5 shadow-sm">
       <div className="flex items-center justify-between">
         <h2 id="derivative-mode-heading" className="text-sm font-medium text-muted">
           Derivada
@@ -123,16 +123,16 @@ export function DerivativeMode() {
         </label>
       </div>
 
-      <div className="space-y-1">
-        <NaturalMathField
-          latex={latex}
-          onLatexChange={setLatex}
-          ariaLabel={isImplicit ? "Ecuación" : "Expresión"}
-          placeholder={isImplicit ? "x^2+y^2=1" : "x^2"}
-          fieldRef={setMathField}
-        />
-        <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
-      </div>
+      <CalculatorScreen
+        latex={latex}
+        onLatexChange={setLatex}
+        ariaLabel={isImplicit ? "Ecuación" : "Expresión"}
+        placeholder={isImplicit ? "x^2+y^2=1" : "x^2"}
+        fieldRef={setMathField}
+        result={lastResult}
+        isLoading={isLoading}
+      />
+      <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
 
       {isImplicit ? (
         <div className="flex gap-4">
@@ -204,10 +204,6 @@ export function DerivativeMode() {
       >
         Derivar
       </button>
-
-      <div className="border-t border-paper-line pt-4">
-        <ResultPanel result={lastResult} isLoading={isLoading} />
-      </div>
     </form>
   );
 }
