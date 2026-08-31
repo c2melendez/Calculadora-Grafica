@@ -21,6 +21,21 @@
  *      "=" -> POST /solve, SIN mandar `variable` (el backend infiere
  *      cuando hay una única variable libre, igual que EquationMode.tsx).
  *   3. Si no, expresión simple -> POST /evaluate, como antes.
+ *
+ * Fase 2 (fusión de modos): se agrega detectCalculusIntent() — derivada e
+ * integral en notación natural. ESTO TOCA UNA DECISIÓN DE SEGURIDAD
+ * ("Fase 0 v2", decisión de Carlos: el ícono "derivada" navega a
+ * DerivativeMode en vez de insertar \frac{d}{dx} en Básico, y las teclas
+ * ∫/Lim se quitaron del teclado). Ver calculusIntent.ts para la
+ * explicación completa de por qué esto NO reabre esa vulnerabilidad (se
+ * extrae la sub-expresión limpia en el cliente y se manda solo eso a los
+ * mismos endpoints dedicados /derivative e /integral que ya usan
+ * DerivativeMode.tsx/IntegralMode.tsx — nunca se le manda al backend un
+ * string con \frac{d}{dx}(...) o \int...dx completo). Se implementa
+ * porque se pidió explícitamente, dejando la explicación por escrito
+ * para que el equipo lo revise antes de producción. Límite queda fuera a
+ * propósito: no existe LimitMode.tsx para verificar el patrón contra un
+ * uso real.
  */
 
 import { useRef, useState, type FormEvent } from "react";
@@ -30,6 +45,7 @@ import type { MathResponse } from "../api/client";
 import { submitAndRecord } from "../api/submitWithHistory";
 import { useUIStore } from "../store/useUIStore";
 import { CalculatorScreen } from "./CalculatorScreen";
+import { detectCalculusIntent, type CalculusIntent } from "./calculusIntent";
 import { latexToBackendSyntax } from "./NaturalMathField";
 import { NaturalMathKeyboard } from "./NaturalMathKeyboard";
 import { splitSystemLatex } from "./systemSplit";
@@ -121,11 +137,59 @@ export function BasicMode() {
     }
   }
 
+  // Fase 2: deriva/integra la sub-expresión LIMPIA extraída por
+  // calculusIntent.ts — nunca el string \frac{d}{dx}(...) / \int...dx
+  // completo. Mismos endpoints y misma forma de payload que
+  // DerivativeMode.tsx/IntegralMode.tsx.
+  async function submitCalculus(intent: CalculusIntent): Promise<void> {
+    const trimmedInner = latexToBackendSyntax(intent.innerLatex);
+    if (!trimmedInner) {
+      setValidationError("La expresión no puede estar vacía.");
+      return;
+    }
+    setValidationError(null);
+
+    setLoading(true);
+    setErrorMessage(null);
+    try {
+      const result =
+        intent.kind === "derivative"
+          ? await submitAndRecord(
+              "/derivative",
+              { expression: trimmedInner, variable: intent.variable, order: intent.order },
+              `d/d${intent.variable} [${trimmedInner}]`,
+            )
+          : await submitAndRecord(
+              "/integral",
+              {
+                expression: trimmedInner,
+                variable: intent.variable,
+                ...(intent.lowerBound !== null
+                  ? { lower_bound: intent.lowerBound, upper_bound: intent.upperBound }
+                  : {}),
+              },
+              `∫ ${trimmedInner}`,
+            );
+      setLastResult(result);
+      if (!result.success) {
+        setErrorMessage(result.error_message ?? "Ocurrió un error.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
 
     if (systemRows) {
       await submitSystem(systemRows);
+      return;
+    }
+
+    const calculusIntent = detectCalculusIntent(latex);
+    if (calculusIntent) {
+      await submitCalculus(calculusIntent);
       return;
     }
 
