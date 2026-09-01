@@ -99,6 +99,7 @@ export function IntegralMode() {
         fieldRef={setMathField}
         result={lastResult}
         isLoading={isLoading}
+        onClearField={() => setLatex("")}
       />
       <NaturalMathKeyboard
         field={mathField}
