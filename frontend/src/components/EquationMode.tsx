@@ -89,6 +89,7 @@ export function EquationMode() {
         onToggleAngleUnit={() => setAngleUnit((u) => (u === "rad" ? "deg" : "rad"))}
         result={lastResult}
         isLoading={isLoading}
+        onClearField={() => setLatex("")}
       />
       <NaturalMathKeyboard
         field={mathField}
