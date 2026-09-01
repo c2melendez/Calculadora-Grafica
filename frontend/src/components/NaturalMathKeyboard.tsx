@@ -5,13 +5,39 @@
  *
  * Fase A (spec UX estilo ClassCalc): reemplaza las capas SHIFT/ALPHA de
  * la Fase 1/2 por el patrón real de ClassCalc — rejilla base fija (más
- * usados) + pestañas Trig/Alg/Stat/Clcs que abren un menú flotante con
- * más funciones (sin ocultar la rejilla base), placeholders de caja
- * vacía □ en vez de letras, glifos matemáticos reales en cada tecla, y
- * los 3 íconos de resolución. Ver KeyGlyph.tsx y la misma implementación
- * ya hecha en Precision Lab Lite (src/components/MathKeyboard.tsx) — la
- * lógica de inserción cambia (field.insert() en vez de onInsert(string)),
- * el resto del patrón visual es el mismo a propósito.
+ * usados) + pestañas Trig/Stat que abren un menú flotante con más
+ * funciones (sin ocultar la rejilla base), placeholders de caja vacía □
+ * en vez de letras, glifos matemáticos reales en cada tecla.
+ *
+ * Rediseño (pedido de Carlos, con capturas de referencia de ClassCalc,
+ * idéntico al de precision-lab-lite/src/components/MathKeyboard.tsx):
+ * - ∫/Σ/d/dx/Lim vuelven, ahora en una tira de Cálculo de 2 renglones
+ *   debajo de los 3 íconos de resolución — antes se habían quitado
+ *   ("Fase 0 v2, Fase 10") porque no había forma segura de resolverlas.
+ *   Ahora SÍ hay: calculusIntent.ts (Fase 2) detecta derivada/integral
+ *   en notación natural en Básico y manda solo la sub-expresión limpia a
+ *   /derivative // /integral — por eso estas teclas ya no necesitan
+ *   "onGoToDerivative" para funcionar ahí, a diferencia de antes.
+ * - Límite NO se agrega en Python (a diferencia de Lite) — no hay
+ *   LimitMode ni detección de límite en calculusIntent.ts (decisión
+ *   documentada en su propio README: sin endpoint /limit verificado
+ *   desde el frontend, se prefirió no repetir el problema que Fase 0 v2
+ *   evitó). Se deja Σ y ∫ (indefinida y con límites) nada más.
+ * - ∬/∭ y variantes con límites de integración: quitadas, no solo
+ *   visuales (decisión de Carlos).
+ * - d²/dx² y órdenes mayores SÍ están cubiertas por calculusIntent
+ *   (backend admite order 1-5) — la tecla de "orden n" inserta un "3"
+ *   literal editable (no "n"), para no caer en silencio a orden 1 si el
+ *   usuario no lo cambia (mismo criterio que en Lite).
+ * - Se quita la pestaña "Alg": mod/GCD/LCM se reubican en "Stat".
+ * - Multiplicación inserta \cdot (punto) en vez de \times.
+ * - ÷ inserta directamente la plantilla de fracción.
+ * - Se agrega un renglón de operadores relacionales (<, >, ≤, ≥).
+ * - La tira de Cálculo solo tiene sentido donde el campo es "una
+ *   expresión libre que puede llevar notación de cálculo" (Básico, vía
+ *   calculusIntent) — en Gráfica/Sistema/etc. el campo tiene otro
+ *   significado (y=f(x), una ecuación del sistema) y no aplica; se
+ *   controla con la prop `showCalculusStrip` (default false).
  */
 
 import type { MathfieldElement } from "mathlive";
@@ -22,55 +48,77 @@ interface KeyDef {
   glyph: Glyph;
   insertLatex: string;
   ariaLabel: string;
+  /** Sin cómputo real detrás (∂/∂x) — presionarla muestra un aviso en
+   * vez de insertar algo que el backend no puede resolver. */
+  unavailable?: boolean;
 }
 
-const key = (glyph: Glyph, insertLatex: string, ariaLabel: string): KeyDef => ({ glyph, insertLatex, ariaLabel });
+const key = (glyph: Glyph, insertLatex: string, ariaLabel: string, unavailable?: boolean): KeyDef => ({
+  glyph,
+  insertLatex,
+  ariaLabel,
+  unavailable,
+});
 
 const BASE_GRID: KeyDef[][] = [
   [
-    key("log", "\\log\\left(#0\\right)", "logaritmo base 10"),
     key("sin", "\\sin\\left(#0\\right)", "seno"),
+    key("cos", "\\cos\\left(#0\\right)", "coseno"),
+    key("tan", "\\tan\\left(#0\\right)", "tangente"),
     key("π", "\\pi", "pi"),
-    key({ frac: ["d", "dx"] }, "\\frac{d}{dx}\\left(#0\\right)", "derivada"),
-    key({ sqrt: BOX }, "\\sqrt{#0}", "raíz cuadrada"),
+    key("θ", "\\theta", "theta"),
   ],
   [
     key("ln", "\\ln\\left(#0\\right)", "logaritmo natural"),
-    key("cos", "\\cos\\left(#0\\right)", "coseno"),
+    key("log", "\\log\\left(#0\\right)", "logaritmo base 10"),
+    key({ sub: BOX, base: "log" }, "\\log_{#0}\\left(#1\\right)", "logaritmo con base"),
     key("e", "e", "e"),
-    // FIX (auditoría Fase 0 v2, Fase 10): la tecla ∫ (y "Lim" más abajo)
-    // insertaba \int/\lim, que ni preprocessLatex ni el backend (spec:
-    // "∫ NO se normaliza"; ast_validator: Integral/Sum/Limit en
-    // BLOCKED_NODE_TYPES, decisión de seguridad deliberada) sabían
-    // resolver — a diferencia de la Lite, aquí no se puede resolver
-    // inline sin pelear contra esa decisión de seguridad, y no hay modo
-    // dedicado de Límite/Serie a donde redirigir. Decisión de Carlos:
-    // quitar la tecla por ahora, no dejarla rota. Reemplazada por una
-    // variable "x" simple (útil, sin el mismo problema).
-    key("x", "x", "variable x"),
-    key({ frac: [BOX, BOX] }, "\\frac{#0}{#1}", "fracción"),
-  ],
-  [
-    key({ sup: "n", base: "10" }, "10^{#0}", "potencia de 10"),
-    key("tan", "\\tan\\left(#0\\right)", "tangente"),
-    key({ sup: "2", base: BOX }, "#0^2", "al cuadrado"),
-    key({ sup: BOX, base: "x" }, "#0^{#1}", "potencia general"),
-    key({ sqrt: BOX, index: "n" }, "\\sqrt[#0]{#1}", "raíz enésima"),
-  ],
-  [
     key({ italic: "i" }, "i", "número imaginario"),
-    key("θ", "\\theta", "theta"),
+  ],
+  [
+    key({ sup: "2", base: BOX }, "#0^2", "al cuadrado"),
+    key({ sup: "n", base: BOX }, "#0^{#1}", "potencia general"),
+    key({ sqrt: BOX }, "\\sqrt{#0}", "raíz cuadrada"),
+    key({ sqrt: BOX, index: "3" }, "\\sqrt[3]{#0}", "raíz cúbica"),
+    key("∞", "\\infty", "infinito"),
+  ],
+  [
+    key("|a|", "\\left|#0\\right|", "valor absoluto"),
+    key("n!", "#0!", "factorial"),
+    key({ italic: "x" }, "x", "variable x"),
+    key({ italic: "y" }, "y", "variable y"),
     key("=", "=", "igual"),
-    key("f(x)=0", "#0=0", "resolver ecuación"),
-    key("⌫", "", "borrar"),
   ],
 ];
 
 const NUMPAD: KeyDef[][] = [
-  [key("7", "7", "7"), key("8", "8", "8"), key("9", "9", "9"), key("÷", "\\div", "dividir"), key("(", "(", "paréntesis izquierdo")],
-  [key("4", "4", "4"), key("5", "5", "5"), key("6", "6", "6"), key("×", "\\times", "multiplicar"), key(")", ")", "paréntesis derecho")],
-  [key("1", "1", "1"), key("2", "2", "2"), key("3", "3", "3"), key("−", "-", "restar"), key("AC", "", "borrar todo")],
-  [key("0", "0", "0"), key(".", ".", "punto"), key(",", ",", "coma"), key("+", "+", "sumar"), key("=", "", "calcular")],
+  [key("7", "7", "7"), key("8", "8", "8"), key("9", "9", "9"), key("÷", "\\frac{#0}{#1}", "dividir"), key("⌫", "", "borrar")],
+  [key("4", "4", "4"), key("5", "5", "5"), key("6", "6", "6"), key("·", "\\cdot", "multiplicar"), key("(", "(", "paréntesis izquierdo")],
+  [key("1", "1", "1"), key("2", "2", "2"), key("3", "3", "3"), key("−", "-", "restar"), key(")", ")", "paréntesis derecho")],
+  [key("0", "0", "0"), key(".", ".", "punto"), key("%", "\\%", "porcentaje"), key("+", "+", "sumar"), key("=", "", "calcular")],
+];
+
+const RELATIONAL_ROW: KeyDef[] = [
+  key("<", "<", "menor que"),
+  key(">", ">", "mayor que"),
+  key("≤", "\\le", "menor o igual que"),
+  key("≥", "\\ge", "mayor o igual que"),
+];
+
+// ---- Tira de Cálculo (2 renglones) — solo ∫/Σ/derivada, sin Lim (ver
+// cabecera del archivo). Todas resueltas de verdad vía calculusIntent.ts
+// en Básico (o el backend nativo para Σ/∫, ya soportados). ----
+const CALCULUS_ROW_1: KeyDef[] = [
+  key("∫", "\\int #0\\,dx", "integral indefinida"),
+  key({ base: "∫", sub: BOX, sup: BOX }, "\\int_{#0}^{#1}#2\\,dx", "integral definida"),
+  key("Σ", "\\sum_{#0}^{#1}#2", "sumatoria"),
+];
+
+const CALCULUS_ROW_2: KeyDef[] = [
+  key({ frac: ["d", "dx"] }, "\\frac{d}{dx}\\left(#0\\right)", "derivada"),
+  key({ frac: ["d²", "dx²"] }, "\\frac{d^2}{dx^2}\\left(#0\\right)", "derivada segunda"),
+  key({ frac: ["dⁿ", "dxⁿ"] }, "\\frac{d^3}{dx^3}\\left(#0\\right)", "derivada de orden n (edita el 3 por el orden que quieras, hasta 5)"),
+  key({ frac: ["∂", "∂x"] }, "", "derivada parcial", true),
 ];
 
 const CATEGORY_MENUS: Record<string, { section: string; keys: KeyDef[] }[]> = {
@@ -85,32 +133,6 @@ const CATEGORY_MENUS: Record<string, { section: string; keys: KeyDef[] }[]> = {
     {
       section: "Hiperbólicas",
       keys: ["sinh", "cosh", "tanh", "csch", "sech", "coth"].map((f) => key(f, `${f}\\left(#0\\right)`, f)),
-    },
-  ],
-  Alg: [
-    {
-      section: "Básico",
-      keys: [
-        key({ sqrt: BOX }, "\\sqrt{#0}", "raíz cuadrada"),
-        key({ sqrt: BOX, index: "n" }, "\\sqrt[#0]{#1}", "raíz enésima"),
-        key({ sup: "2", base: BOX }, "#0^2", "al cuadrado"),
-        key({ sup: BOX, base: BOX }, "#0^{#1}", "potencia"),
-        key("e", "e", "e"),
-        key("π", "\\pi", "pi"),
-      ],
-    },
-    {
-      section: "Avanzado",
-      keys: [
-        key("log", "\\log\\left(#0\\right)", "logaritmo"),
-        key({ sub: BOX, base: "log" }, "\\log_{#0}\\left(#1\\right)", "logaritmo con base"),
-        key("ln", "\\ln\\left(#0\\right)", "logaritmo natural"),
-        key("mod", "\\mathrm{mod}\\left(#0,#1\\right)", "módulo"),
-        key("|a|", "\\left|#0\\right|", "valor absoluto"),
-        key("%", "\\%", "porcentaje"),
-        key("GCD", "\\gcd\\left(#0,#1\\right)", "máximo común divisor"),
-        key("LCM", "\\mathrm{lcm}\\left(#0,#1\\right)", "mínimo común múltiplo"),
-      ],
     },
   ],
   Stat: [
@@ -132,55 +154,59 @@ const CATEGORY_MENUS: Record<string, { section: string; keys: KeyDef[] }[]> = {
         key("variance", "\\mathrm{var}\\left(#0\\right)", "varianza"),
         key({ sub: "n", base: "C" }, "\\mathrm{nCr}\\left(#0,#1\\right)", "combinaciones"),
         key({ sub: "n", base: "P" }, "\\mathrm{nPr}\\left(#0,#1\\right)", "permutaciones"),
-        key("n!", "#0!", "factorial"),
         key("sort", "\\mathrm{sort}\\left(#0\\right)", "ordenar"),
         key("mad", "\\mathrm{mad}\\left(#0\\right)", "desviación absoluta media"),
       ],
     },
-  ],
-  Clcs: [
     {
-      section: "Continuo",
-      keys: [key({ frac: ["d", "dx"] }, "\\frac{d}{dx}\\left(#0\\right)", "derivada")],
-    },
-    {
-      section: "Discreto",
+      // Reubicadas desde la extinta pestaña "Alg" (rediseño del teclado).
+      section: "Número entero",
       keys: [
-        key({ italic: "x" }, "x", "variable x"),
-        key({ italic: "y" }, "y", "variable y"),
+        key("mod", "\\mathrm{mod}\\left(#0,#1\\right)", "módulo"),
+        key("GCD", "\\gcd\\left(#0,#1\\right)", "máximo común divisor"),
+        key("LCM", "\\mathrm{lcm}\\left(#0,#1\\right)", "mínimo común múltiplo"),
       ],
     },
   ],
 };
 
-const CATEGORIES = ["Trig", "Alg", "Stat", "Clcs"] as const;
+const CATEGORIES = ["Trig", "Stat"] as const;
 
 interface NaturalMathKeyboardProps {
   field: MathfieldElement | null;
   onSubmit?: () => void;
+  onClearField?: () => void;
   onSolveEquation?: () => void;
   onSolveSystem?: () => void;
   onSimplify?: () => void;
-  /** Fase 0 v2 (decisión de Carlos): d/dx en la rejilla base no se resuelve
-   * inline — Derivative está bloqueado a nivel de seguridad en el backend
-   * (ast_validator.py, BLOCKED_NODE_TYPES). En vez de insertar la
-   * plantilla LaTeX (que antes daba un resultado incorrecto en silencio,
-   * ver normalize.ts de precision-lab-lite para el mismo hallazgo), esta
-   * tecla navega al modo Derivada, que sí lo resuelve de verdad. */
+  /** Fase 0 v2 (decisión de Carlos), ya no necesaria para la tira de
+   * Cálculo (ver cabecera del archivo) — se deja como prop opcional por
+   * si algún consumidor todavía la usa. */
   onGoToDerivative?: () => void;
+  /** La tira de Cálculo solo tiene sentido donde el campo es una
+   * expresión libre resuelta vía calculusIntent (Básico). Default false. */
+  showCalculusStrip?: boolean;
 }
 
 export function NaturalMathKeyboard({
   field,
   onSubmit,
+  onClearField,
   onSolveEquation,
   onSolveSystem,
   onSimplify,
-  onGoToDerivative,
+  onGoToDerivative: _onGoToDerivative,
+  showCalculusStrip = false,
 }: NaturalMathKeyboardProps) {
   const [openCategory, setOpenCategory] = useState<(typeof CATEGORIES)[number] | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   function press(k: KeyDef): void {
+    if (k.unavailable) {
+      setNotice(`${k.ariaLabel}: todavía no disponible.`);
+      window.setTimeout(() => setNotice(null), 2500);
+      return;
+    }
     field?.focus();
     if (k.insertLatex) field?.insert(k.insertLatex);
     setOpenCategory(null);
@@ -192,22 +218,19 @@ export function NaturalMathKeyboard({
       field?.executeCommand("deleteBackward");
       return;
     }
-    if (k.glyph === "AC") {
-      field?.focus();
-      field?.setValue("");
-      return;
-    }
-    // La "=" de la rejilla base inserta el signo literal (necesario para
-    // ecuaciones, ej. "x = 5"); la "=" del numérico dispara onSubmit —
-    // misma distinción de la Fase 1/2, se preserva aquí.
     if (k.glyph === "=" && k.insertLatex === "") return onSubmit?.();
     if (k.glyph === "f(x)=0") return onSolveEquation ? onSolveEquation() : press(k);
-    if (k.ariaLabel === "derivada") return onGoToDerivative ? onGoToDerivative() : press(k);
     press(k);
   }
 
   return (
-    <div className="relative rounded-lg bg-chrome p-3">
+    <div className="relative rounded-xl bg-chrome p-3">
+      {notice && (
+        <div className="absolute bottom-full left-3 right-3 mb-1.5 rounded-lg bg-chrome-soft px-3 py-2 text-center text-xs text-bone shadow-lg">
+          {notice}
+        </div>
+      )}
+
       {openCategory && (
         <div className="absolute bottom-full left-3 right-3 mb-1.5 rounded-lg bg-chrome-soft p-3 shadow-lg">
           {CATEGORY_MENUS[openCategory].map((group) => (
@@ -218,7 +241,7 @@ export function NaturalMathKeyboard({
                   <button
                     key={`${group.section}-${i}`}
                     type="button"
-                    onClick={() => (k.ariaLabel === "derivada" ? (onGoToDerivative ? onGoToDerivative() : press(k)) : press(k))}
+                    onClick={() => press(k)}
                     aria-label={k.ariaLabel}
                     className="rounded-md bg-marker-soft/10 py-2 text-sm text-marker hover:bg-marker-soft/20"
                   >
@@ -263,6 +286,52 @@ export function NaturalMathKeyboard({
         </button>
       </div>
 
+      {showCalculusStrip && (
+        <div className="relative mb-1.5 rounded-lg bg-chrome-soft/60 p-1.5">
+          <div className="mb-1 grid grid-cols-3 gap-1">
+            {CALCULUS_ROW_1.map((k, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => press(k)}
+                aria-label={k.ariaLabel}
+                className="rounded-md bg-chrome-soft py-1.5 text-[11px] text-bone hover:bg-chrome-soft/70"
+              >
+                <KeyGlyph glyph={k.glyph} />
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-4 gap-1">
+            {CALCULUS_ROW_2.map((k, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => press(k)}
+                aria-label={k.ariaLabel}
+                className={
+                  k.unavailable
+                    ? "rounded-md bg-chrome-soft py-1.5 text-[10px] text-bone/40 hover:bg-chrome-soft/70"
+                    : "rounded-md bg-chrome-soft py-1.5 text-[10px] text-bone hover:bg-chrome-soft/70"
+                }
+              >
+                <KeyGlyph glyph={k.glyph} />
+              </button>
+            ))}
+          </div>
+          {onClearField && (
+            <button
+              type="button"
+              onClick={onClearField}
+              aria-label="Borrar todo el campo"
+              title="Borrar todo"
+              className="absolute -right-1 -top-1 rounded-md bg-chrome p-1.5 text-bone/70 hover:text-bone"
+            >
+              🗑
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="mb-1.5 flex gap-3 px-1">
         {CATEGORIES.map((cat) => (
           <button
@@ -297,7 +366,7 @@ export function NaturalMathKeyboard({
               onClick={() => pressBase(k)}
               aria-label={k.ariaLabel}
               className={
-                /^[0-9.,]$/.test(String(k.glyph))
+                /^[0-9.]$/.test(String(k.glyph))
                   ? "rounded-md bg-chrome-soft/80 py-2 text-sm font-medium text-bone hover:bg-chrome-soft/60"
                   : "rounded-md bg-chrome-soft py-2 text-[11px] text-bone hover:bg-chrome-soft/70"
               }
@@ -307,6 +376,20 @@ export function NaturalMathKeyboard({
           ))}
         </div>
       ))}
+
+      <div className="grid grid-cols-4 gap-1">
+        {RELATIONAL_ROW.map((k, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => press(k)}
+            aria-label={k.ariaLabel}
+            className="rounded-md bg-paper-soft py-1.5 text-sm text-ink hover:bg-paper-line/60"
+          >
+            <KeyGlyph glyph={k.glyph} />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
