@@ -80,7 +80,6 @@ export function BasicMode() {
   const setLoading = useUIStore((state) => state.setLoading);
   const setErrorMessage = useUIStore((state) => state.setErrorMessage);
   const isLoading = useUIStore((state) => state.isLoading);
-  const setActiveMode = useUIStore((state) => state.setActiveMode);
 
   const systemRows = splitSystemLatex(latex);
 
@@ -281,6 +280,7 @@ export function BasicMode() {
         onToggleAngleUnit={() => setAngleUnit((u) => (u === "rad" ? "deg" : "rad"))}
         result={lastResult}
         isLoading={isLoading}
+        onClearField={() => setLatex("")}
       />
 
       {systemRows && (
@@ -307,10 +307,11 @@ export function BasicMode() {
       <NaturalMathKeyboard
         field={mathField}
         onSubmit={() => formRef.current?.requestSubmit()}
+        onClearField={() => setLatex("")}
         onSolveEquation={handleSolveEquation}
         onSolveSystem={handleSolveSystem}
         onSimplify={handleSimplify}
-        onGoToDerivative={() => setActiveMode("derivative")}
+        showCalculusStrip
       />
 
       <div className="flex flex-wrap gap-2">
