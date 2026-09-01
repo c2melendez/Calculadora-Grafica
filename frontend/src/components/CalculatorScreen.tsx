@@ -44,6 +44,9 @@ interface CalculatorScreenProps {
   onToggleAngleUnit?: () => void;
   result: MathResponse | null;
   isLoading: boolean;
+  /** Punto 7 del rediseño de teclado: botón "X" para vaciar el campo,
+   * visible dentro del display cuando hay contenido. */
+  onClearField?: () => void;
 }
 
 export function CalculatorScreen({
@@ -56,6 +59,7 @@ export function CalculatorScreen({
   onToggleAngleUnit,
   result,
   isLoading,
+  onClearField,
 }: CalculatorScreenProps) {
   // Las entradas se guardan más-nuevo-primero (ver useHistoryStore.ts:
   // `[newEntry, ...get().entries]`) — se toman las 2 más recientes y se
@@ -116,6 +120,17 @@ export function CalculatorScreen({
           fieldRef={fieldRef}
           bare
         />
+        {onClearField && latex.length > 0 && (
+          <button
+            type="button"
+            onClick={onClearField}
+            aria-label="Borrar campo"
+            title="clear field"
+            className="absolute right-10 top-1/2 -translate-y-1/2 rounded p-1 text-muted hover:text-ink"
+          >
+            ✕
+          </button>
+        )}
         <button
           type="submit"
           aria-label="Evaluar"
