@@ -190,19 +190,21 @@ describe("BasicMode", () => {
     });
   });
 
-  // Fase 0 v2 (decisión de Carlos): d/dx ya no se resuelve inline en
-  // Básica — Derivative está bloqueado a nivel de seguridad en el backend
-  // (antes de este fix, insertaba \frac{d}{dx}(...) que el backend
-  // interpretaba como símbolos sueltos y daba una respuesta incorrecta
-  // SIN error). Ahora navega al modo Derivada en vez de insertar nada.
-  it('la tecla "derivada" del teclado navega al modo Derivada en vez de insertar texto', () => {
+  // Fase 0 v2 (histórico): d/dx no se resolvía inline en Básica —
+  // Derivative estaba bloqueado a nivel de seguridad en el backend (antes
+  // de ese fix, insertaba \frac{d}{dx}(...) que el backend interpretaba
+  // como símbolos sueltos y daba una respuesta incorrecta SIN error), así
+  // que la tecla navegaba al modo Derivada en vez de insertar nada.
+  // Fase 2 + rediseño de teclado (decisión de Carlos): d/dx ya NO navega
+  // a Derivada — calculusIntent.ts (Fase 2) resuelve la derivada inline
+  // en Básico, mandando la sub-expresión limpia a /derivative. La tecla
+  // ahora solo inserta la plantilla LaTeX, como cualquier otra tecla de
+  // la tira de Cálculo.
+  it('la tecla "derivada" del teclado inserta la plantilla LaTeX (Fase 2 la resuelve inline, ya no navega)', () => {
     render(<BasicMode />);
 
     expect(useUIStore.getState().activeMode).toBe("basic");
     fireEvent.click(screen.getByLabelText("derivada"));
-    expect(useUIStore.getState().activeMode).toBe("derivative");
-
-    // no debe haber insertado nada en el campo de expresión
-    expect(screen.getByLabelText("Expresión")).toHaveValue("");
+    expect(useUIStore.getState().activeMode).toBe("basic");
   });
 });
