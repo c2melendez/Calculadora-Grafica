@@ -7,6 +7,7 @@ export type Glyph =
   | string
   | { sup: string; base?: string }
   | { sub: string; base: string }
+  | { sub: string; sup: string; base: string }
   | { frac: [string, string] }
   | { sqrt: string; index?: string }
   | { italic: string };
@@ -35,6 +36,18 @@ export function KeyGlyph({ glyph, className = "" }: { glyph: Glyph; className?: 
         )}
         <span className={glyph.index ? "ml-1.5" : ""}>√</span>
         <span className="border-t border-current pl-0.5">{glyph.sqrt}</span>
+      </span>
+    );
+  }
+
+  if ("sub" in glyph && "sup" in glyph) {
+    return (
+      <span className={`inline-flex items-center ${className}`}>
+        <span>{glyph.base}</span>
+        <span className="ml-0.5 inline-flex flex-col justify-center leading-none">
+          <span className="text-[0.6em]">{glyph.sup}</span>
+          <span className="text-[0.6em]">{glyph.sub}</span>
+        </span>
       </span>
     );
   }
