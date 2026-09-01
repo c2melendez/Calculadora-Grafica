@@ -131,6 +131,7 @@ export function DerivativeMode() {
         fieldRef={setMathField}
         result={lastResult}
         isLoading={isLoading}
+        onClearField={() => setLatex("")}
       />
       <NaturalMathKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
 
