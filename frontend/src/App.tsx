@@ -34,16 +34,14 @@ const MODE_LABELS: Record<CalculatorMode, string> = {
   graph: "Gráficas",
 };
 
-const MODE_ORDER: CalculatorMode[] = [
-  "basic",
-  "simple",
-  "derivative",
-  "integral",
-  "equation",
-  "system",
-  "matrix",
-  "graph",
-];
+// Punto 4 del rediseño de teclado (pedido de Carlos): Derivada/Integral/
+// Ecuación/Sistema ya no deben verse en el frontend — su función quedó
+// cubierta por el router de Fase 1/2 dentro de "Científica" (ecuación/
+// sistema/derivada/integral, todo en una sola pantalla vía
+// calculusIntent.ts + submitCalculus). Los modos en sí NO se eliminan
+// (siguen existiendo, siguen siendo válidos si algo interno navega ahí,
+// ej. antes onGoToDerivative), solo se les quita la pestaña visible.
+const VISIBLE_MODES: CalculatorMode[] = ["basic", "simple", "matrix", "graph"];
 
 function ActiveModeForm({ mode }: { mode: CalculatorMode }) {
   switch (mode) {
@@ -103,7 +101,7 @@ export default function App() {
 
       <nav aria-label="Modos de la calculadora" className="border-b border-paper-line bg-paper-soft px-6">
         <ul className="mx-auto flex max-w-3xl flex-wrap gap-6">
-          {MODE_ORDER.map((mode) => (
+          {VISIBLE_MODES.map((mode) => (
             <li key={mode}>
               <button
                 type="button"
