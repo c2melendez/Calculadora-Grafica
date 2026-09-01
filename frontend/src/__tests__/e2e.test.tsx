@@ -16,11 +16,12 @@
  * red simulada en la frontera de `fetch` en vez de un servidor real.
  */
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "../App";
 import { HISTORY_STORAGE_KEY, useHistoryStore } from "../store/useHistoryStore";
+import { useUIStore } from "../store/useUIStore";
 
 // El modo Básico (montado por defecto al renderizar <App />) usa MathLive
 // (<math-field>), un custom element que jsdom no implementa. Se sustituye
@@ -86,8 +87,14 @@ describe("E2E mínimo — Derivada (sección 15)", () => {
   it("x**2 en Derivada -> MathResponse real -> steps renderizados -> historial -> reuseEntry reejecuta", async () => {
     render(<App />);
 
-    // 1. Cambiar al modo Derivada.
-    fireEvent.click(screen.getByRole("button", { name: "Derivada" }));
+    // 1. Cambiar al modo Derivada. Punto 4 del rediseño de teclado: la
+    // pestaña "Derivada" ya no está visible en la navegación (Carlos
+    // pidió ocultarla) — el modo sigue existiendo, se navega con el
+    // store directamente, como ya hace onGoToDerivative/etc. en el resto
+    // de la app.
+    act(() => {
+      useUIStore.getState().setActiveMode("derivative");
+    });
 
     // 2. Introducir x**2 y enviar.
     const expressionInput = screen.getByLabelText("Expresión");
