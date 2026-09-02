@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import type { MathResponse } from "../api/client";
@@ -176,5 +176,59 @@ describe("ResultPanel", () => {
     );
     expect(screen.getByText("63/4")).toBeInTheDocument();
     expect(screen.getByText("≈ 15.75")).toBeInTheDocument();
+  });
+
+  // Fase 2.5 (pedido explícito del usuario): selector de formato
+  // dec/frac/scn/exacto, antes inexistente en este proyecto (Lite ya lo
+  // tenía). "frac" nunca fabrica una fracción a partir de un decimal —
+  // solo la muestra cuando SymPy ya la dio exacta.
+  describe("Fase 2.5 — selector de formato dec/frac/scn/exacto", () => {
+    const fractionResult: MathResponse = {
+      ...baseResult,
+      result_latex: "\\frac{8}{9}",
+      result_text: "8/9",
+      result_approx: 0.8888888888888888,
+    };
+
+    it("formato 'dec' muestra la aproximación decimal", () => {
+      render(<ResultPanel result={fractionResult} isLoading={false} />);
+      fireEvent.click(screen.getByRole("button", { name: "dec" }));
+      expect(screen.getByText(/0\.888/)).toBeInTheDocument();
+    });
+
+    it("formato 'scn' muestra notación científica", () => {
+      render(<ResultPanel result={fractionResult} isLoading={false} />);
+      fireEvent.click(screen.getByRole("button", { name: "scn" }));
+      expect(screen.getByText(/8\.888889e-1/)).toBeInTheDocument();
+    });
+
+    it("formato 'frac' muestra la fracción cuando result_latex ya es \\frac{}{}", () => {
+      const { container } = render(<ResultPanel result={fractionResult} isLoading={false} />);
+      fireEvent.click(screen.getByRole("button", { name: "frac" }));
+      // KaTeX descompone el LaTeX en spans (y duplica texto en su capa de
+      // accesibilidad) — se compara el texto renderizado del contenedor
+      // en vez de buscar nodos de texto exactos.
+      const text = container.textContent?.replace(/\s+/g, "") ?? "";
+      expect(text).toContain("8");
+      expect(text).toContain("9");
+    });
+
+    it("formato 'frac' NO fabrica una fracción cuando el resultado no es exacto (ej. sqrt(7))", () => {
+      render(
+        <ResultPanel
+          result={{ ...baseResult, result_latex: "\\sqrt{7}", result_text: "sqrt(7)", result_approx: 2.6457513 }}
+          isLoading={false}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "frac" }));
+      expect(screen.getByText(/no es una fracción exacta/)).toBeInTheDocument();
+    });
+
+    it("volver a 'exacto' muestra de nuevo el resultado original con el aproximado debajo", () => {
+      render(<ResultPanel result={fractionResult} isLoading={false} />);
+      fireEvent.click(screen.getByRole("button", { name: "dec" }));
+      fireEvent.click(screen.getByRole("button", { name: "exacto" }));
+      expect(screen.getByText(/≈ 0\.888/)).toBeInTheDocument();
+    });
   });
 });
