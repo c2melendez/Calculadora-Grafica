@@ -15,6 +15,22 @@ import { formatResultApprox } from "./formatNumber";
 import { MathRenderer } from "./MathRenderer";
 import { StepList } from "./StepList";
 
+// Fase 2.5 (bug reportado por el usuario): antes se mostraban SIEMPRE
+// "exacto" (result_latex) y "≈ aproximado" (result_approx) juntos, sin
+// forma de pedir notación científica ni saber si el resultado exacto ya
+// es una fracción. Se agrega un selector de 4 formatos, mismo criterio
+// que ya usa Lite (dec/frac/scn/exacto) — con una diferencia importante:
+// acá NO hay una capa de fracciones propia como fractions.ts en Lite, así
+// que "frac" nunca INVENTA una fracción a partir de un decimal
+// aproximado (sería fabricar precisión falsa) — solo muestra
+// result_latex cuando SymPy ya lo devolvió como \frac{...}{...} de
+// forma exacta; si no, dice explícitamente que no aplica.
+type AnswerFormat = "exact" | "dec" | "scn" | "frac";
+
+function isFractionLatex(latex: string | null | undefined): boolean {
+  return latex !== null && latex !== undefined && latex.includes("\\frac");
+}
+
 interface ResultPanelProps {
   result: MathResponse | null;
   isLoading: boolean;
@@ -107,6 +123,8 @@ function SolutionListResult({ solutions }: { solutions: EquationSolution[] }) {
 }
 
 export function ResultPanel({ result, isLoading }: ResultPanelProps) {
+  const [format, setFormat] = useState<AnswerFormat>("exact");
+
   if (isLoading) {
     return (
       <div role="status" aria-live="polite" className="text-sm text-muted">
@@ -146,21 +164,63 @@ export function ResultPanel({ result, isLoading }: ResultPanelProps) {
 
       {!matrixData && !solutionData && (result.result_latex || result.result_text) && (
         <div className="space-y-1">
-          {result.result_latex ? (
-            <MathRenderer
-              latex={result.result_latex}
-              fallbackText={result.result_text ?? undefined}
-              className="text-lg"
-            />
-          ) : (
-            <p className="text-lg text-ink">{result.result_text}</p>
-          )}
+          {(() => {
+            if (format === "dec") {
+              return approxText ? (
+                <p className="text-lg text-ink">{approxText}</p>
+              ) : (
+                <p className="text-sm text-muted">No hay aproximación decimal disponible.</p>
+              );
+            }
+            if (format === "scn") {
+              const n = result.result_approx != null ? Number(result.result_approx) : NaN;
+              return Number.isFinite(n) ? (
+                <p className="text-lg text-ink">{n.toExponential(6)}</p>
+              ) : (
+                <p className="text-sm text-muted">No hay un valor numérico para notación científica.</p>
+              );
+            }
+            if (format === "frac") {
+              // No se fabrica una fracción a partir de un decimal
+              // aproximado — solo se muestra cuando SymPy ya la dio
+              // exacta (ver isFractionLatex arriba).
+              return isFractionLatex(result.result_latex) ? (
+                <MathRenderer latex={result.result_latex!} fallbackText={result.result_text ?? undefined} className="text-lg" />
+              ) : (
+                <p className="text-sm text-muted">El resultado no es una fracción exacta.</p>
+              );
+            }
+            // "exact": comportamiento original, sin cambios.
+            return result.result_latex ? (
+              <MathRenderer
+                latex={result.result_latex}
+                fallbackText={result.result_text ?? undefined}
+                className="text-lg"
+              />
+            ) : (
+              <p className="text-lg text-ink">{result.result_text}</p>
+            );
+          })()}
           {/* Fracción exacta (arriba) y decimal (abajo) mostrados juntos —
               nunca uno oculta al otro (sección 9: fracciones + su
-              equivalente decimal). */}
-          {approxText && approxText !== result.result_text && (
+              equivalente decimal) — solo en el formato "exact", que es el
+              que ya traía este comportamiento antes de Fase 2.5. */}
+          {format === "exact" && approxText && approxText !== result.result_text && (
             <p className="text-sm text-muted">≈ {approxText}</p>
           )}
+          <div className="flex gap-3 pt-1 text-xs text-muted">
+            {(["exact", "dec", "frac", "scn"] as AnswerFormat[]).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFormat(f)}
+                aria-pressed={format === f}
+                className={format === f ? "font-semibold text-marker" : "hover:text-ink"}
+              >
+                {f === "exact" ? "exacto" : f}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
