@@ -18,6 +18,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GraphMode } from "./components/GraphMode";
 import { History } from "./components/History";
 import { IntegralMode } from "./components/IntegralMode";
+import { LimitMode } from "./components/LimitMode";
 import { MatrixMode } from "./components/MatrixMode";
 import { SystemMode } from "./components/SystemMode";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -32,6 +33,7 @@ const MODE_LABELS: Record<CalculatorMode, string> = {
   system: "Sistemas",
   matrix: "Matrices",
   graph: "Gráficas",
+  limit: "Límite",
 };
 
 // Punto 4 del rediseño de teclado (pedido de Carlos): Derivada/Integral/
@@ -41,6 +43,9 @@ const MODE_LABELS: Record<CalculatorMode, string> = {
 // calculusIntent.ts + submitCalculus). Los modos en sí NO se eliminan
 // (siguen existiendo, siguen siendo válidos si algo interno navega ahí,
 // ej. antes onGoToDerivative), solo se les quita la pestaña visible.
+// Límite sigue el mismo criterio desde que se creó: el router también lo
+// detecta ahora (ver calculusIntent.ts), así que tampoco ocupa un lugar
+// en la navegación principal.
 const VISIBLE_MODES: CalculatorMode[] = ["basic", "simple", "matrix", "graph"];
 
 function ActiveModeForm({ mode }: { mode: CalculatorMode }) {
@@ -61,6 +66,8 @@ function ActiveModeForm({ mode }: { mode: CalculatorMode }) {
       return <MatrixMode />;
     case "graph":
       return <GraphMode />;
+    case "limit":
+      return <LimitMode />;
   }
 }
 
