@@ -45,13 +45,16 @@
  * incluido) lo revise antes de que se use en producción — no se está
  * dando por sentado que esto reemplaza esa revisión.
  *
- * LÍMITE se deja FUERA de este archivo a propósito: no existe
- * `LimitMode.tsx` en este proyecto (a diferencia de Lite, que sí tiene
- * `CalculusMode.tsx` con soporte de límite) — o sea, `/limit` no tiene
- * ningún uso real desde el frontend hoy contra el cual verificar el
- * patrón de payload. Agregar detección de límite sin un modo dedicado ya
- * probado sería repetir exactamente el problema que la Fase 0 v2 evitó
- * para ∫/Lim en primer lugar.
+ * LÍMITE: desde que existe `LimitMode.tsx` (verificado en vivo contra el
+ * backend real: limit(1/x,x→∞)=0, limit((x²-4)/(x-2),x→2)=4,
+ * limit(1/x,x→0⁺)=∞), sí se detecta acá — con una limitación real
+ * encontrada al verificar: la notación lateral (\lim_{x\to0^+}) NO se
+ * parsea de forma confiable en Compute Engine 0.58.0 (da
+ * ["PseudoInverse",["Error",...]] para "+" y ["Superminus",0] para "-" —
+ * básicamente basura, no una dirección). Por eso la detección natural
+ * SOLO cubre límite finito y al infinito (ambos lados, "both") — límite
+ * LATERAL sigue necesitando el formulario dedicado de `LimitMode.tsx`,
+ * que tiene un selector explícito en vez de depender de esta notación.
  *
  * =====================================================================
  * DOS TÉCNICAS DISTINTAS (mismo motivo que en Lite, reverificado acá)
@@ -69,20 +72,25 @@
  * importa qué hay adentro del paréntesis, solo la forma exacta del
  * template.
  *
- * Integral: sí se usa Compute Engine (reconocimiento confiable y
- * consistente en ambas versiones probadas), pero la forma del MathJSON
- * cambió entre versiones — acá es
+ * Integral y límite: sí se usa Compute Engine (reconocimiento confiable
+ * y consistente para estos dos, en ambas versiones probadas), pero la
+ * forma del MathJSON cambió entre versiones — acá integral es
  * ["Integrate", ["Function", ["Block", <cuerpo>], var], ["Limits", var, lowerOrNothing, upperOrNothing]]
- * en vez de ["Integrate", <cuerpo>, var|["Triple", var, lower, upper]]
- * como en Lite. Verificado directo contra el paquete real antes de
- * escribir este archivo, no asumido por similitud con Lite.
+ * y límite es
+ * ["Limit", ["Function", ["Block", <cuerpo>], var], puntoONumeroOSímboloInfinito]
+ * — el punto puede ser un número, o los símbolos "PositiveInfinity"/
+ * "NegativeInfinity" (mapeados a "oo"/"-oo", que el backend ya acepta
+ * como constantes — ver ALLOWED_CONSTANTS en parsing.py). Verificado
+ * directo contra el paquete real antes de escribir este archivo, no
+ * asumido por similitud con Lite.
  */
 
 import { ComputeEngine } from "@cortex-js/compute-engine";
 
 export type CalculusIntent =
   | { kind: "derivative"; variable: string; order: 1 | 2 | 3 | 4 | 5; innerLatex: string }
-  | { kind: "integral"; variable: string; lowerBound: string | null; upperBound: string | null; innerLatex: string };
+  | { kind: "integral"; variable: string; lowerBound: string | null; upperBound: string | null; innerLatex: string }
+  | { kind: "limit"; variable: string; point: string; innerLatex: string };
 
 // ---------------------------------------------------------------------
 // Derivada (escáner propio — ver explicación arriba)
@@ -189,9 +197,49 @@ function detectIntegral(latex: string): Extract<CalculusIntent, { kind: "integra
   return { kind: "integral", variable, lowerBound: String(lower), upperBound: String(upper), innerLatex };
 }
 
+function detectLimit(latex: string): Extract<CalculusIntent, { kind: "limit" }> | null {
+  const trimmed = latex.trim();
+  if (trimmed.length === 0) return null;
+
+  let expr;
+  try {
+    expr = getComputeEngine().parse(trimmed);
+  } catch {
+    return null;
+  }
+  if (!expr || !Array.isArray(expr.json) || expr.json[0] !== "Limit") return null;
+
+  // ["Limit", ["Function", ["Block", <cuerpo>], var], puntoONúmeroOSímboloInfinito]
+  const [, fnJson, pointJson] = expr.json;
+  if (!Array.isArray(fnJson) || fnJson[0] !== "Function") return null;
+  let bodyJson = fnJson[1];
+  if (Array.isArray(bodyJson) && bodyJson[0] === "Block") bodyJson = bodyJson[1];
+  const variable = fnJson[2];
+  if (typeof variable !== "string") return null;
+
+  const innerLatex = getComputeEngine().box(bodyJson).latex;
+  if (!innerLatex) return null;
+
+  // Solo se acepta un punto finito (número) o infinito (símbolos
+  // reconocidos) — cualquier otra forma (ej. la notación lateral rota,
+  // ver comentario de cabecera) devuelve null y cae al flujo normal.
+  let point: string;
+  if (typeof pointJson === "number") {
+    point = String(pointJson);
+  } else if (pointJson === "PositiveInfinity") {
+    point = "oo";
+  } else if (pointJson === "NegativeInfinity") {
+    point = "-oo";
+  } else {
+    return null;
+  }
+
+  return { kind: "limit", variable, point, innerLatex };
+}
+
 /** Punto de entrada único del router (BasicMode.tsx). Derivada primero
- * (más barato, solo regex); límite queda deliberadamente fuera — ver
- * comentario de cabecera. */
+ * (más barato, solo regex); integral y límite comparten el mismo motor
+ * de reconocimiento (Compute Engine). */
 export function detectCalculusIntent(latex: string): CalculusIntent | null {
-  return detectDerivative(latex) ?? detectIntegral(latex);
+  return detectDerivative(latex) ?? detectIntegral(latex) ?? detectLimit(latex);
 }
