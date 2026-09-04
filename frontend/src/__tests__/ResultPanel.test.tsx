@@ -231,4 +231,67 @@ describe("ResultPanel", () => {
       expect(screen.getByText(/≈ 0\.888/)).toBeInTheDocument();
     });
   });
+
+  // Modo fracción propia/impropia (pedido explícito del usuario) — el
+  // toggle solo debe aparecer cuando la fracción es realmente impropia
+  // (|numerador| >= denominador); 8/9 (arriba) es propia y no lo
+  // dispara, por eso estos tests usan una fracción impropia aparte.
+  describe("modo fracción propia/impropia", () => {
+    const improperFractionResult: MathResponse = {
+      ...baseResult,
+      result_latex: "\\frac{57}{2}",
+      result_text: "57/2",
+      result_approx: 28.5,
+    };
+
+    it("no muestra el toggle para una fracción propia (8/9)", () => {
+      const fractionResult: MathResponse = {
+        ...baseResult,
+        result_latex: "\\frac{8}{9}",
+        result_text: "8/9",
+        result_approx: 0.888,
+      };
+      render(<ResultPanel result={fractionResult} isLoading={false} />);
+      fireEvent.click(screen.getByRole("button", { name: "frac" }));
+      expect(screen.queryByText(/ver como/)).not.toBeInTheDocument();
+    });
+
+    it("una fracción impropia (57/2) se muestra mixta por defecto (28 y 1/2)", () => {
+      const { container } = render(<ResultPanel result={improperFractionResult} isLoading={false} />);
+      fireEvent.click(screen.getByRole("button", { name: "frac" }));
+      const text = container.textContent?.replace(/\s+/g, "") ?? "";
+      expect(text).toContain("28");
+      expect(text).toContain("1");
+      expect(text).toContain("2");
+      expect(screen.getByText("ver como impropia")).toBeInTheDocument();
+    });
+
+    it("el toggle cambia a la forma impropia (57/2) y de vuelta a mixta", () => {
+      const { container } = render(<ResultPanel result={improperFractionResult} isLoading={false} />);
+      fireEvent.click(screen.getByRole("button", { name: "frac" }));
+
+      fireEvent.click(screen.getByText("ver como impropia"));
+      expect(screen.getByText("ver como mixta")).toBeInTheDocument();
+      let text = container.textContent?.replace(/\s+/g, "") ?? "";
+      expect(text).toContain("57");
+      expect(text).toContain("2");
+
+      fireEvent.click(screen.getByText("ver como mixta"));
+      expect(screen.getByText("ver como impropia")).toBeInTheDocument();
+      text = container.textContent?.replace(/\s+/g, "") ?? "";
+      expect(text).toContain("28");
+    });
+
+    it("una fracción negativa impropia (-57/2) da forma mixta con signo (-28 y 1/2)", () => {
+      const { container } = render(
+        <ResultPanel
+          result={{ ...baseResult, result_latex: "- \\frac{57}{2}", result_text: "-57/2", result_approx: -28.5 }}
+          isLoading={false}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "frac" }));
+      const text = container.textContent?.replace(/\s+/g, "") ?? "";
+      expect(text).toContain("-28");
+    });
+  });
 });
