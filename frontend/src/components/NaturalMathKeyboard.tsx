@@ -18,11 +18,16 @@
  *   en notación natural en Básico y manda solo la sub-expresión limpia a
  *   /derivative // /integral — por eso estas teclas ya no necesitan
  *   "onGoToDerivative" para funcionar ahí, a diferencia de antes.
- * - Límite NO se agrega en Python (a diferencia de Lite) — no hay
- *   LimitMode ni detección de límite en calculusIntent.ts (decisión
- *   documentada en su propio README: sin endpoint /limit verificado
- *   desde el frontend, se prefirió no repetir el problema que Fase 0 v2
- *   evitó). Se deja Σ y ∫ (indefinida y con límites) nada más.
+ * - Límite YA es funcional para punto finito e infinito (patch de
+ *   Carlos: LimitMode.tsx + detectLimit() en calculusIntent.ts, /limit
+ *   ya funcionaba en el backend, solo faltaba el frontend). Lateral
+ *   (x\to0^+/0^-) queda marcado `unavailable` — Compute Engine 0.58.0 da
+ *   MathJSON sin sentido para esa notación (confirmado por el propio
+ *   patch), detectLimit() devuelve null y cae al flujo normal, que el
+ *   backend rechaza (Limit sigue bloqueado en ast_validator.py fuera de
+ *   /limit) — mejor un aviso claro que ese error confuso. Para lateral,
+ *   la única vía es el formulario dedicado LimitMode.tsx (sin pestaña
+ *   visible, mismo criterio que Derivada/Integral/Ecuación/Sistema).
  * - ∬/∭ y variantes con límites de integración: quitadas, no solo
  *   visuales (decisión de Carlos).
  * - d²/dx² y órdenes mayores SÍ están cubiertas por calculusIntent
@@ -105,9 +110,15 @@ const RELATIONAL_ROW: KeyDef[] = [
   key("≥", "\\ge", "mayor o igual que"),
 ];
 
-// ---- Tira de Cálculo (2 renglones) — solo ∫/Σ/derivada, sin Lim (ver
-// cabecera del archivo). Todas resueltas de verdad vía calculusIntent.ts
-// en Básico (o el backend nativo para Σ/∫, ya soportados). ----
+// ---- Tira de Cálculo (2 renglones). ∫/Σ/derivada resueltas de verdad
+// vía calculusIntent.ts en Básico (o backend nativo para Σ/∫). Lim se
+// agrega aquí SOLO como icono — Carlos está armando aparte el patch que
+// las hace funcionales (no hay LimitMode ni detección de límite en
+// calculusIntent.ts todavía, ver cabecera del archivo) — marcadas
+// `unavailable` por honestidad mientras tanto: sin esto, presionarlas
+// insertaría \lim_{...} que el backend rechaza (Limit sigue bloqueado en
+// ast_validator.py) con un error confuso, no un aviso claro. Quitar el
+// `unavailable`/agregar la 4ta insertLatex cuando ese patch aterrice. ----
 const CALCULUS_ROW_1: KeyDef[] = [
   key("∫", "\\int #0\\,dx", "integral indefinida"),
   key({ base: "∫", sub: BOX, sup: BOX }, "\\int_{#0}^{#1}#2\\,dx", "integral definida"),
@@ -119,6 +130,10 @@ const CALCULUS_ROW_2: KeyDef[] = [
   key({ frac: ["d²", "dx²"] }, "\\frac{d^2}{dx^2}\\left(#0\\right)", "derivada segunda"),
   key({ frac: ["dⁿ", "dxⁿ"] }, "\\frac{d^3}{dx^3}\\left(#0\\right)", "derivada de orden n (edita el 3 por el orden que quieras, hasta 5)"),
   key({ frac: ["∂", "∂x"] }, "", "derivada parcial", true),
+  key({ base: "lim", sub: "x→a" }, "\\lim_{#0\\to#1}#2", "límite"),
+  key({ base: "lim", sub: "x→∞" }, "\\lim_{#0\\to\\infty}#1", "límite al infinito"),
+  key({ base: "lim", sub: "x→a+" }, "\\lim_{#0\\to#1^+}#2", "límite lateral derecho", true),
+  key({ base: "lim", sub: "x→a-" }, "\\lim_{#0\\to#1^-}#2", "límite lateral izquierdo", true),
 ];
 
 const CATEGORY_MENUS: Record<string, { section: string; keys: KeyDef[] }[]> = {
@@ -301,7 +316,7 @@ export function NaturalMathKeyboard({
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-4 gap-1">
+          <div className="grid grid-cols-8 gap-1">
             {CALCULUS_ROW_2.map((k, i) => (
               <button
                 key={i}
