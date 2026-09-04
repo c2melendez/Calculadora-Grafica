@@ -190,6 +190,38 @@ describe("BasicMode", () => {
     });
   });
 
+  it("enruta a /limit con la sub-expresión limpia y direction: 'both' (notación natural, sin lateralidad)", async () => {
+    render(<BasicMode />);
+    fireEvent.change(screen.getByLabelText("Expresión"), {
+      target: { value: "\\lim_{x\\to 2} \\frac{x^2-4}{x-2}" },
+    });
+    fireEvent.submit(screen.getByRole("button", { name: "Evaluar" }).closest("form")!);
+
+    await waitFor(() => expect(mockedCallApi).toHaveBeenCalled());
+
+    expect(mockedCallApi).toHaveBeenCalledWith("/limit", {
+      expression: "\\frac{x^2-4}{x-2}",
+      variable: "x",
+      point: "2",
+      direction: "both",
+    });
+  });
+
+  it("enruta a /limit con punto 'oo' cuando la notación es al infinito", async () => {
+    render(<BasicMode />);
+    fireEvent.change(screen.getByLabelText("Expresión"), {
+      target: { value: "\\lim_{x\\to \\infty} \\frac{1}{x}" },
+    });
+    fireEvent.submit(screen.getByRole("button", { name: "Evaluar" }).closest("form")!);
+
+    await waitFor(() => expect(mockedCallApi).toHaveBeenCalled());
+
+    expect(mockedCallApi).toHaveBeenCalledWith(
+      "/limit",
+      expect.objectContaining({ point: "oo", direction: "both" }),
+    );
+  });
+
   // Fase 0 v2 (histórico): d/dx no se resolvía inline en Básica —
   // Derivative estaba bloqueado a nivel de seguridad en el backend (antes
   // de ese fix, insertaba \frac{d}{dx}(...) que el backend interpretaba
