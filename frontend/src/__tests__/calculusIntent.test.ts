@@ -70,6 +70,49 @@ describe("detectCalculusIntent (Fase 2 — fusión de modos, proyecto con backen
     });
   });
 
+  describe("límite (Compute Engine — finito e infinito; lateral queda fuera, ver cabecera)", () => {
+    it("detecta un límite con punto finito", () => {
+      expect(detectCalculusIntent("\\lim_{x\\to 2} \\frac{x^2-4}{x-2}")).toEqual({
+        kind: "limit",
+        variable: "x",
+        point: "2",
+        innerLatex: "\\frac{x^2-4}{x-2}",
+      });
+    });
+
+    it("detecta un límite al +infinito (PositiveInfinity -> \"oo\")", () => {
+      expect(detectCalculusIntent("\\lim_{x\\to \\infty} \\frac{1}{x}")).toEqual({
+        kind: "limit",
+        variable: "x",
+        point: "oo",
+        innerLatex: "\\frac{1}{x}",
+      });
+    });
+
+    it("detecta un límite al -infinito (NegativeInfinity -> \"-oo\")", () => {
+      expect(detectCalculusIntent("\\lim_{x\\to -\\infty} \\frac{1}{x}")).toEqual({
+        kind: "limit",
+        variable: "x",
+        point: "-oo",
+        innerLatex: "\\frac{1}{x}",
+      });
+    });
+
+    // Bug real encontrado al verificar contra el paquete instalado
+    // (0.58.0): la notación lateral da MathJSON sin sentido
+    // (PseudoInverse/Superminus de un Error), no un punto+dirección
+    // utilizable. Se verifica que NO se detecte como límite en vez de
+    // fabricar un resultado con datos rotos — cae al flujo normal
+    // (probablemente /evaluate, que fallará con un error claro).
+    it("NO detecta límite lateral derecho (notación rota en esta versión del motor)", () => {
+      expect(detectCalculusIntent("\\lim_{x\\to 0^+} \\frac{1}{x}")).toBeNull();
+    });
+
+    it("NO detecta límite lateral izquierdo (notación rota en esta versión del motor)", () => {
+      expect(detectCalculusIntent("\\lim_{x\\to 0^-} \\frac{1}{x}")).toBeNull();
+    });
+  });
+
   describe("controles negativos", () => {
     it("una ecuación simple no es cálculo", () => {
       expect(detectCalculusIntent("2x+3=7")).toBeNull();
