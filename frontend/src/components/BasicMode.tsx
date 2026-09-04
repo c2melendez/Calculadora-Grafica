@@ -158,17 +158,27 @@ export function BasicMode() {
               { expression: trimmedInner, variable: intent.variable, order: intent.order },
               `d/d${intent.variable} [${trimmedInner}]`,
             )
-          : await submitAndRecord(
-              "/integral",
-              {
-                expression: trimmedInner,
-                variable: intent.variable,
-                ...(intent.lowerBound !== null
-                  ? { lower_bound: intent.lowerBound, upper_bound: intent.upperBound }
-                  : {}),
-              },
-              `∫ ${trimmedInner}`,
-            );
+          : intent.kind === "integral"
+            ? await submitAndRecord(
+                "/integral",
+                {
+                  expression: trimmedInner,
+                  variable: intent.variable,
+                  ...(intent.lowerBound !== null
+                    ? { lower_bound: intent.lowerBound, upper_bound: intent.upperBound }
+                    : {}),
+                },
+                `∫ ${trimmedInner}`,
+              )
+            : await submitAndRecord(
+                "/limit",
+                // La detección natural solo cubre "both" (ver
+                // calculusIntent.ts — la notación lateral \to a^+/a^- no
+                // se parsea de forma confiable); lateral real sigue
+                // necesitando LimitMode.tsx.
+                { expression: trimmedInner, variable: intent.variable, point: intent.point, direction: "both" },
+                `lim[${intent.variable}->${intent.point}] ${trimmedInner}`,
+              );
       setLastResult(result);
       if (!result.success) {
         setErrorMessage(result.error_message ?? "Ocurrió un error.");
