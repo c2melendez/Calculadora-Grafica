@@ -12,6 +12,7 @@ import { useState } from "react";
 
 import type { EquationSolution, MathResponse } from "../api/client";
 import { formatResultApprox } from "./formatNumber";
+import { parseFracLatex, toMixedFracLatex } from "./fractionDisplay";
 import { MathRenderer } from "./MathRenderer";
 import { StepList } from "./StepList";
 
@@ -124,6 +125,10 @@ function SolutionListResult({ solutions }: { solutions: EquationSolution[] }) {
 
 export function ResultPanel({ result, isLoading }: ResultPanelProps) {
   const [format, setFormat] = useState<AnswerFormat>("exact");
+  // Modo fracción propia/impropia (pedido explícito) — mismo criterio
+  // que el toggle equivalente en Lite: default mixta cuando corresponde,
+  // el usuario puede pedir la impropia.
+  const [showMixed, setShowMixed] = useState(true);
 
   if (isLoading) {
     return (
@@ -156,6 +161,8 @@ export function ResultPanel({ result, isLoading }: ResultPanelProps) {
     : null;
   const approxText = result.result_approx != null ? formatResultApprox(result.result_approx) : null;
   const copyText = result.result_text ?? approxText;
+  const parsedFraction = isFractionLatex(result.result_latex) ? parseFracLatex(result.result_latex!) : null;
+  const mixedLatex = parsedFraction ? toMixedFracLatex(parsedFraction.n, parsedFraction.d) : null;
 
   return (
     <div aria-live="polite" className="space-y-4 fade-in">
@@ -184,10 +191,12 @@ export function ResultPanel({ result, isLoading }: ResultPanelProps) {
               // No se fabrica una fracción a partir de un decimal
               // aproximado — solo se muestra cuando SymPy ya la dio
               // exacta (ver isFractionLatex arriba).
-              return isFractionLatex(result.result_latex) ? (
-                <MathRenderer latex={result.result_latex!} fallbackText={result.result_text ?? undefined} className="text-lg" />
-              ) : (
-                <p className="text-sm text-muted">El resultado no es una fracción exacta.</p>
+              if (!isFractionLatex(result.result_latex)) {
+                return <p className="text-sm text-muted">El resultado no es una fracción exacta.</p>;
+              }
+              const displayLatex = mixedLatex && showMixed ? mixedLatex : result.result_latex!;
+              return (
+                <MathRenderer latex={displayLatex} fallbackText={result.result_text ?? undefined} className="text-lg" />
               );
             }
             // "exact": comportamiento original, sin cambios.
@@ -207,6 +216,15 @@ export function ResultPanel({ result, isLoading }: ResultPanelProps) {
               que ya traía este comportamiento antes de Fase 2.5. */}
           {format === "exact" && approxText && approxText !== result.result_text && (
             <p className="text-sm text-muted">≈ {approxText}</p>
+          )}
+          {format === "frac" && mixedLatex && (
+            <button
+              type="button"
+              onClick={() => setShowMixed((v) => !v)}
+              className="text-xs text-muted underline decoration-dotted hover:text-marker"
+            >
+              {showMixed ? "ver como impropia" : "ver como mixta"}
+            </button>
           )}
           <div className="flex gap-3 pt-1 text-xs text-muted">
             {(["exact", "dec", "frac", "scn"] as AnswerFormat[]).map((f) => (
