@@ -275,110 +275,121 @@ export function BasicMode() {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="basic-mode-heading" className="space-y-6">
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      aria-labelledby="basic-mode-heading"
+      className="mx-auto max-w-lg space-y-6 lg:max-w-3xl lg:grid lg:grid-cols-[1.4fr_1fr] lg:items-start lg:gap-6 lg:space-y-0 dt:max-w-4xl dt:gap-10"
+    >
       <h2 id="basic-mode-heading" className="sr-only">
         Básico
       </h2>
 
-      <CalculatorScreen
-        latex={latex}
-        onLatexChange={setLatex}
-        ariaLabel="Expresión"
-        placeholder="2x + √9"
-        fieldRef={setMathField}
-        angleUnit={angleUnit}
-        onToggleAngleUnit={() => setAngleUnit((u) => (u === "rad" ? "deg" : "rad"))}
-        result={lastResult}
-        isLoading={isLoading}
-        onClearField={() => setLatex("")}
-      />
+      <div className="space-y-6 lg:col-start-1">
+        <CalculatorScreen
+          latex={latex}
+          onLatexChange={setLatex}
+          ariaLabel="Expresión"
+          placeholder="2x + √9"
+          fieldRef={setMathField}
+          angleUnit={angleUnit}
+          onToggleAngleUnit={() => setAngleUnit((u) => (u === "rad" ? "deg" : "rad"))}
+          result={lastResult}
+          isLoading={isLoading}
+          onClearField={() => setLatex("")}
+        />
 
-      {systemRows && (
-        <div className="-mt-4 flex flex-wrap items-center gap-2 px-2">
-          <label htmlFor="system-variables-inline" className="text-xs text-muted">
-            Variables del sistema (separadas por coma, {systemRows.length} ecuaciones detectadas):
-          </label>
-          <input
-            id="system-variables-inline"
-            type="text"
-            value={systemVariables}
-            onChange={(e) => setSystemVariables(e.target.value)}
-            className="w-32 rounded border border-paper-line bg-paper-soft px-2 py-1 text-xs text-ink"
-          />
-        </div>
-      )}
+        {systemRows && (
+          <div className="-mt-4 flex flex-wrap items-center gap-2 px-2">
+            <label htmlFor="system-variables-inline" className="text-xs text-muted">
+              Variables del sistema (separadas por coma, {systemRows.length} ecuaciones detectadas):
+            </label>
+            <input
+              id="system-variables-inline"
+              type="text"
+              value={systemVariables}
+              onChange={(e) => setSystemVariables(e.target.value)}
+              className="w-32 rounded border border-paper-line bg-paper-soft px-2 py-1 text-xs text-ink"
+            />
+          </div>
+        )}
 
-      {validationError && (
-        <p role="alert" className="-mt-4 px-2 text-sm text-red-600">
-          {validationError}
-        </p>
-      )}
-
-      <NaturalMathKeyboard
-        field={mathField}
-        onSubmit={() => formRef.current?.requestSubmit()}
-        onClearField={() => setLatex("")}
-        onSolveEquation={handleSolveEquation}
-        onSolveSystem={handleSolveSystem}
-        onSimplify={handleSimplify}
-        showCalculusStrip
-      />
-
-      <div className="flex flex-wrap gap-2">
-        <span className="pt-1.5 text-xs font-medium text-muted">Ejemplos:</span>
-        {EXAMPLES.map((example) => (
-          <button
-            key={example.display}
-            type="button"
-            onClick={() => setLatex(example.latex)}
-            className="rounded-full border border-paper-line bg-paper-soft px-3 py-1 text-xs text-muted hover:border-marker/40 hover:text-marker"
-          >
-            {example.display}
-          </button>
-        ))}
+        {validationError && (
+          <p role="alert" className="-mt-4 px-2 text-sm text-red-600">
+            {validationError}
+          </p>
+        )}
       </div>
 
-      <details className="group rounded-lg border border-paper-line bg-paper-soft open:pb-3">
-        <summary className="cursor-pointer list-none px-4 py-2.5 text-sm font-medium text-muted marker:content-none">
-          Opciones avanzadas (sustituciones)
-        </summary>
-        <div className="space-y-4 px-4 pt-1">
-          <div className="space-y-2">
-            <span className="block text-sm text-muted">Sustituciones (opcional, solo aplica a expresiones simples)</span>
-            {substitutions.map((row, index) => (
-              <div key={index} className="flex gap-2">
-                <input
-                  aria-label={`Nombre de la variable ${index + 1}`}
-                  value={row.name}
-                  onChange={(e) => updateSubstitutionRow(index, "name", e.target.value)}
-                  className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm text-ink"
-                />
-                <input
-                  aria-label={`Valor de la variable ${index + 1}`}
-                  value={row.value}
-                  onChange={(e) => updateSubstitutionRow(index, "value", e.target.value)}
-                  className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm text-ink"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeSubstitutionRow(index)}
-                  aria-label={`Eliminar sustitución ${index + 1}`}
-                  className="text-sm text-muted hover:text-muted"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+      <div className="lg:col-start-2">
+        <NaturalMathKeyboard
+          field={mathField}
+          onSubmit={() => formRef.current?.requestSubmit()}
+          onClearField={() => setLatex("")}
+          onSolveEquation={handleSolveEquation}
+          onSolveSystem={handleSolveSystem}
+          onSimplify={handleSimplify}
+          showCalculusStrip
+        />
+      </div>
+
+      <div className="space-y-6 lg:col-span-2">
+        <div className="flex flex-wrap gap-2">
+          <span className="pt-1.5 text-xs font-medium text-muted">Ejemplos:</span>
+          {EXAMPLES.map((example) => (
             <button
+              key={example.display}
               type="button"
-              onClick={addSubstitutionRow}
-              className="text-sm text-marker hover:text-marker-text"
+              onClick={() => setLatex(example.latex)}
+              className="rounded-full border border-paper-line bg-paper-soft px-3 py-1 text-xs text-muted hover:border-marker/40 hover:text-marker"
             >
-              + Añadir sustitución
+              {example.display}
             </button>
-          </div>
+          ))}
         </div>
-      </details>
+
+        <details className="group rounded-lg border border-paper-line bg-paper-soft open:pb-3">
+          <summary className="cursor-pointer list-none px-4 py-2.5 text-sm font-medium text-muted marker:content-none">
+            Opciones avanzadas (sustituciones)
+          </summary>
+          <div className="space-y-4 px-4 pt-1">
+            <div className="space-y-2">
+              <span className="block text-sm text-muted">Sustituciones (opcional, solo aplica a expresiones simples)</span>
+              {substitutions.map((row, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    aria-label={`Nombre de la variable ${index + 1}`}
+                    value={row.name}
+                    onChange={(e) => updateSubstitutionRow(index, "name", e.target.value)}
+                    className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm text-ink"
+                  />
+                  <input
+                    aria-label={`Valor de la variable ${index + 1}`}
+                    value={row.value}
+                    onChange={(e) => updateSubstitutionRow(index, "value", e.target.value)}
+                    className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm text-ink"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeSubstitutionRow(index)}
+                    aria-label={`Eliminar sustitución ${index + 1}`}
+                    className="text-sm text-muted hover:text-muted"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addSubstitutionRow}
+                className="text-sm text-marker hover:text-marker-text"
+              >
+                + Añadir sustitución
+              </button>
+            </div>
+          </div>
+        </details>
+      </div>
     </form>
   );
 }

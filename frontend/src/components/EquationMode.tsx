@@ -74,7 +74,7 @@ export function EquationMode() {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="equation-mode-heading" className="space-y-4 rounded-lg border border-paper-line p-5 shadow-sm">
+    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="equation-mode-heading" className="mx-auto max-w-lg space-y-4 rounded-lg border border-paper-line p-5 shadow-sm lg:max-w-2xl dt:max-w-3xl">
       <h2 id="equation-mode-heading" className="text-sm font-medium text-muted">
         Ecuación
       </h2>

@@ -100,106 +100,110 @@ export function SystemMode() {
       ref={formRef}
       onSubmit={handleSubmit}
       aria-labelledby="system-mode-heading"
-      className="space-y-4 rounded-lg border border-paper-line p-5 shadow-sm"
+      className="rounded-lg border border-paper-line p-5 shadow-sm lg:grid lg:max-w-4xl lg:grid-cols-[1.4fr_1fr] lg:items-start lg:gap-6 dt:mx-auto dt:gap-10"
     >
-      <h2 id="system-mode-heading" className="text-sm font-medium text-muted">
-        Sistema de ecuaciones
-      </h2>
+      <div className="space-y-4 lg:col-start-1">
+        <h2 id="system-mode-heading" className="text-sm font-medium text-muted">
+          Sistema de ecuaciones
+        </h2>
 
-      <div className="space-y-2">
-        <span className="block text-sm text-muted">Ecuaciones</span>
-        {latexRows.map((row, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <div className="flex-1">
-              <NaturalMathField
-                latex={row}
-                onLatexChange={(value) => updateRow(index, value)}
-                ariaLabel={`Ecuación ${index + 1}`}
-                placeholder="x+y=5"
-                fieldRef={(el) =>
-                  setMathFields((current) => current.map((f, i) => (i === index ? el : f)))
-                }
-              />
+        <div className="space-y-2">
+          <span className="block text-sm text-muted">Ecuaciones</span>
+          {latexRows.map((row, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className="flex-1">
+                <NaturalMathField
+                  latex={row}
+                  onLatexChange={(value) => updateRow(index, value)}
+                  ariaLabel={`Ecuación ${index + 1}`}
+                  placeholder="x+y=5"
+                  fieldRef={(el) =>
+                    setMathFields((current) => current.map((f, i) => (i === index ? el : f)))
+                  }
+                />
+              </div>
+              {latexRows.length > MIN_EQUATIONS && (
+                <button
+                  type="button"
+                  onClick={() => removeRow(index)}
+                  aria-label={`Eliminar ecuación ${index + 1}`}
+                  className="text-sm text-muted hover:text-ink"
+                >
+                  ✕
+                </button>
+              )}
             </div>
-            {latexRows.length > MIN_EQUATIONS && (
-              <button
-                type="button"
-                onClick={() => removeRow(index)}
-                aria-label={`Eliminar ecuación ${index + 1}`}
-                className="text-sm text-muted hover:text-ink"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        ))}
-        {latexRows.length < MAX_EQUATIONS && (
-          <button
-            type="button"
-            onClick={addRow}
-            className="text-sm text-marker hover:text-marker-text"
-          >
-            + Añadir ecuación
-          </button>
-        )}
-      </div>
-
-      <div className="space-y-1">
-        <span className="block text-xs font-medium text-muted">
-          Teclado para la ecuación seleccionada:
-        </span>
-        <div className="flex flex-wrap gap-1">
-          {latexRows.map((_, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => setActiveRow(index)}
-              aria-pressed={activeRow === index}
-              className={`rounded px-2 py-1 text-xs ${
-                activeRow === index
-                  ? "bg-graph text-white"
-                  : "border border-paper-line text-muted hover:bg-paper"
-              }`}
-            >
-              #{index + 1}
-            </button>
           ))}
+          {latexRows.length < MAX_EQUATIONS && (
+            <button
+              type="button"
+              onClick={addRow}
+              className="text-sm text-marker hover:text-marker-text"
+            >
+              + Añadir ecuación
+            </button>
+          )}
         </div>
-        <NaturalMathKeyboard
-          field={mathFields[activeRow] ?? null}
-          onSubmit={() => formRef.current?.requestSubmit()}
-          onGoToDerivative={() => setActiveMode("derivative")}
-        />
+
+        <div className="space-y-1">
+          <span className="block text-xs font-medium text-muted">
+            Teclado para la ecuación seleccionada:
+          </span>
+          <div className="flex flex-wrap gap-1">
+            {latexRows.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setActiveRow(index)}
+                aria-pressed={activeRow === index}
+                className={`rounded px-2 py-1 text-xs ${
+                  activeRow === index
+                    ? "bg-graph text-white"
+                    : "border border-paper-line text-muted hover:bg-paper"
+                }`}
+              >
+                #{index + 1}
+              </button>
+            ))}
+          </div>
+          <NaturalMathKeyboard
+            field={mathFields[activeRow] ?? null}
+            onSubmit={() => formRef.current?.requestSubmit()}
+            onGoToDerivative={() => setActiveMode("derivative")}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label htmlFor="system-variables" className="block text-sm text-muted">
+            Variables (separadas por coma, en el mismo orden que se resolverán)
+          </label>
+          <input
+            id="system-variables"
+            type="text"
+            value={variables}
+            onChange={(e) => setVariables(e.target.value)}
+            className="w-full rounded border border-paper-line bg-paper-soft px-3 py-2 text-sm"
+          />
+        </div>
+
+        {validationError && (
+          <p role="alert" className="text-sm text-red-600">
+            {validationError}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          className="rounded bg-graph px-4 py-2 text-sm font-medium text-white hover:bg-graph/90"
+        >
+          Resolver sistema
+        </button>
       </div>
 
-      <div className="space-y-1">
-        <label htmlFor="system-variables" className="block text-sm text-muted">
-          Variables (separadas por coma, en el mismo orden que se resolverán)
-        </label>
-        <input
-          id="system-variables"
-          type="text"
-          value={variables}
-          onChange={(e) => setVariables(e.target.value)}
-          className="w-full rounded border border-paper-line bg-paper-soft px-3 py-2 text-sm"
-        />
-      </div>
-
-      {validationError && (
-        <p role="alert" className="text-sm text-red-600">
-          {validationError}
-        </p>
-      )}
-
-      <button
-        type="submit"
-        className="rounded bg-graph px-4 py-2 text-sm font-medium text-white hover:bg-graph/90"
-      >
-        Resolver sistema
-      </button>
-
-      <div className="rounded-xl bg-paper-soft px-4 py-3 shadow-inner shadow-black/10">
-        <ResultPanel result={lastResult} isLoading={isLoading} />
+      <div className="mt-4 lg:col-start-2 lg:mt-0">
+        <div className="rounded-xl bg-paper-soft px-4 py-3 shadow-inner shadow-black/10">
+          <ResultPanel result={lastResult} isLoading={isLoading} />
+        </div>
       </div>
     </form>
   );

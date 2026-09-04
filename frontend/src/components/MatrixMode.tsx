@@ -213,92 +213,96 @@ export function MatrixMode() {
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-labelledby="matrix-mode-heading" className="space-y-4 rounded-lg border border-paper-line p-5 shadow-sm">
-      <h2 id="matrix-mode-heading" className="text-sm font-medium text-muted">
-        Matrices
-      </h2>
+    <form onSubmit={handleSubmit} aria-labelledby="matrix-mode-heading" className="rounded-lg border border-paper-line p-5 shadow-sm lg:grid lg:max-w-4xl lg:grid-cols-[1.4fr_1fr] lg:items-start lg:gap-6 dt:mx-auto dt:gap-10">
+      <div className="space-y-4 lg:col-start-1">
+        <h2 id="matrix-mode-heading" className="text-sm font-medium text-muted">
+          Matrices
+        </h2>
 
-      <div className="space-y-1">
-        <label htmlFor="matrix-operation" className="block text-sm text-muted">
-          Operación
-        </label>
-        <select
-          id="matrix-operation"
-          value={operation}
-          onChange={(e) => setOperation(e.target.value as Operation)}
-          className="rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
-        >
-          {(Object.keys(OPERATION_LABELS) as Operation[]).map((op) => (
-            <option key={op} value={op}>
-              {OPERATION_LABELS[op]}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <MatrixGrid
-        label="Matriz A"
-        matrix={matrixA}
-        rows={rowsA}
-        cols={colsA}
-        onDimensionsChange={handleDimensionsA}
-        onCellChange={(r, c, value) =>
-          setMatrixA((current) =>
-            current.map((row, i) =>
-              i === r ? row.map((cell, j) => (j === c ? value : cell)) : row,
-            ),
-          )
-        }
-      />
-
-      {NEEDS_EXPONENT.has(operation) && (
         <div className="space-y-1">
-          <label htmlFor="matrix-exponent" className="block text-sm text-muted">
-            Exponente (entero, de -10 a 10)
+          <label htmlFor="matrix-operation" className="block text-sm text-muted">
+            Operación
           </label>
-          <input
-            id="matrix-exponent"
-            type="text"
-            inputMode="numeric"
-            value={exponent}
-            onChange={(e) => setExponent(e.target.value)}
-            className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
-          />
+          <select
+            id="matrix-operation"
+            value={operation}
+            onChange={(e) => setOperation(e.target.value as Operation)}
+            className="rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
+          >
+            {(Object.keys(OPERATION_LABELS) as Operation[]).map((op) => (
+              <option key={op} value={op}>
+                {OPERATION_LABELS[op]}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
 
-      {NEEDS_MATRIX_B.has(operation) && (
         <MatrixGrid
-          label="Matriz B"
-          matrix={matrixB}
-          rows={rowsB}
-          cols={colsB}
-          onDimensionsChange={handleDimensionsB}
+          label="Matriz A"
+          matrix={matrixA}
+          rows={rowsA}
+          cols={colsA}
+          onDimensionsChange={handleDimensionsA}
           onCellChange={(r, c, value) =>
-            setMatrixB((current) =>
+            setMatrixA((current) =>
               current.map((row, i) =>
                 i === r ? row.map((cell, j) => (j === c ? value : cell)) : row,
               ),
             )
           }
         />
-      )}
 
-      {validationError && (
-        <p role="alert" className="text-sm text-red-600">
-          {validationError}
-        </p>
-      )}
+        {NEEDS_EXPONENT.has(operation) && (
+          <div className="space-y-1">
+            <label htmlFor="matrix-exponent" className="block text-sm text-muted">
+              Exponente (entero, de -10 a 10)
+            </label>
+            <input
+              id="matrix-exponent"
+              type="text"
+              inputMode="numeric"
+              value={exponent}
+              onChange={(e) => setExponent(e.target.value)}
+              className="w-24 rounded border border-paper-line bg-paper-soft px-2 py-1 text-sm"
+            />
+          </div>
+        )}
 
-      <button
-        type="submit"
-        className="rounded bg-graph px-4 py-2 text-sm font-medium text-white hover:bg-graph/90"
-      >
-        Calcular
-      </button>
+        {NEEDS_MATRIX_B.has(operation) && (
+          <MatrixGrid
+            label="Matriz B"
+            matrix={matrixB}
+            rows={rowsB}
+            cols={colsB}
+            onDimensionsChange={handleDimensionsB}
+            onCellChange={(r, c, value) =>
+              setMatrixB((current) =>
+                current.map((row, i) =>
+                  i === r ? row.map((cell, j) => (j === c ? value : cell)) : row,
+                ),
+              )
+            }
+          />
+        )}
 
-      <div className="rounded-xl bg-paper-soft px-4 py-3 shadow-inner shadow-black/10">
-        <ResultPanel result={lastResult} isLoading={isLoading} />
+        {validationError && (
+          <p role="alert" className="text-sm text-red-600">
+            {validationError}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          className="rounded bg-graph px-4 py-2 text-sm font-medium text-white hover:bg-graph/90"
+        >
+          Calcular
+        </button>
+      </div>
+
+      <div className="mt-4 lg:col-start-2 lg:mt-0">
+        <div className="rounded-xl bg-paper-soft px-4 py-3 shadow-inner shadow-black/10">
+          <ResultPanel result={lastResult} isLoading={isLoading} />
+        </div>
       </div>
     </form>
   );

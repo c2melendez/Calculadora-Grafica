@@ -4,6 +4,8 @@
 // hex fijos, para soportar los 3 temas ([data-theme]: dark/light/high-contrast)
 // sin duplicar componentes. Cambios aquí deben reflejarse también en el
 // tailwind.config.js del proyecto Python para mantener paridad visual.
+import defaultTheme from "tailwindcss/defaultTheme";
+
 function withOpacity(varName) {
   return ({ opacityValue }) =>
     opacityValue === undefined
@@ -16,6 +18,13 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      // spec v2 §2: breakpoint dt agregado porque 1440px no coincide con
+      // ningún breakpoint por defecto de Tailwind. Spread explícito de
+      // defaultTheme.screens para no perder sm/md/lg/xl existentes.
+      screens: {
+        ...defaultTheme.screens,
+        dt: "1440px",
+      },
       colors: {
         chrome: {
           DEFAULT: withOpacity("--color-chrome"),

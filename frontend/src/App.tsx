@@ -17,6 +17,7 @@ import { EquationMode } from "./components/EquationMode";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GraphMode } from "./components/GraphMode";
 import { History } from "./components/History";
+import { HistoryDrawer } from "./components/HistoryDrawer";
 import { IntegralMode } from "./components/IntegralMode";
 import { LimitMode } from "./components/LimitMode";
 import { MatrixMode } from "./components/MatrixMode";
@@ -87,7 +88,7 @@ export default function App() {
       </a>
 
       <header className="border-b border-paper-line bg-paper-soft px-6 py-3">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
+        <div className="mx-auto flex max-w-3xl items-center justify-between lg:max-w-5xl dt:max-w-[1440px]">
           <h1 className="text-lg font-semibold text-ink">
             Precision<span className="text-marker">Lab</span>
           </h1>
@@ -107,7 +108,7 @@ export default function App() {
       </header>
 
       <nav aria-label="Modos de la calculadora" className="border-b border-paper-line bg-paper-soft px-6">
-        <ul className="mx-auto flex max-w-3xl flex-wrap gap-6">
+        <ul className="mx-auto flex max-w-3xl flex-wrap gap-6 lg:max-w-5xl dt:max-w-[1440px]">
           {VISIBLE_MODES.map((mode) => (
             <li key={mode}>
               <button
@@ -127,31 +128,26 @@ export default function App() {
         </ul>
       </nav>
 
-      <main id="main-content" className="mx-auto max-w-3xl px-6 py-8">
-        {lastErrorMessage && (
-          <p role="alert" className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {lastErrorMessage}
-          </p>
-        )}
+      <div className="flex">
+        <main id="main-content" className="mx-auto min-w-0 max-w-3xl flex-1 px-6 py-8 lg:max-w-5xl dt:max-w-[1440px] dt:px-10">
+          {lastErrorMessage && (
+            <p role="alert" className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {lastErrorMessage}
+            </p>
+          )}
 
-        {showHistory && (
-          <section
-            id="history-panel"
-            aria-label="Historial de operaciones"
-            className="mb-6 rounded-xl border border-paper-line bg-paper-soft p-4 shadow-sm"
-          >
-            <ErrorBoundary fallbackLabel="No se pudo mostrar el historial.">
-              <History />
+          <section aria-live="polite" aria-label="Resultado" className="mx-auto max-w-md lg:max-w-none">
+            <ErrorBoundary fallbackLabel="No se pudo mostrar el resultado.">
+              <ActiveModeForm mode={activeMode} />
             </ErrorBoundary>
           </section>
-        )}
-
-        <section aria-live="polite" aria-label="Resultado" className="mx-auto max-w-md">
-          <ErrorBoundary fallbackLabel="No se pudo mostrar el resultado.">
-            <ActiveModeForm mode={activeMode} />
+        </main>
+        <HistoryDrawer isOpen={showHistory} onClose={() => setShowHistory(false)}>
+          <ErrorBoundary fallbackLabel="No se pudo mostrar el historial.">
+            <History />
           </ErrorBoundary>
-        </section>
-      </main>
+        </HistoryDrawer>
+      </div>
     </div>
   );
 }

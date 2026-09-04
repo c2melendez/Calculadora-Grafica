@@ -681,7 +681,7 @@ export function GraphMode() {
   const [kind, setKind] = useState<GraphKind>("2d");
 
   return (
-    <div className="space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm">
+    <div className="mx-auto max-w-lg space-y-4 rounded-lg border border-paper-line bg-paper-soft p-5 shadow-sm lg:max-w-3xl dt:max-w-4xl">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-medium text-muted">Gráficas</h2>
         <div className="flex gap-1" role="tablist" aria-label="Tipo de gráfica">

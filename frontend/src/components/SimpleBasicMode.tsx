@@ -52,25 +52,26 @@ export function SimpleBasicMode() {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="simple-basic-heading" className="mx-auto max-w-sm space-y-3">
+    <form ref={formRef} onSubmit={handleSubmit} aria-labelledby="simple-basic-heading" className="mx-auto max-w-sm space-y-3 lg:max-w-3xl lg:grid lg:grid-cols-[1.4fr_1fr] lg:items-start lg:gap-6 lg:space-y-0 dt:gap-10">
       <h2 id="simple-basic-heading" className="sr-only">
         Basic
       </h2>
 
-      <NaturalMathField latex={latex} onLatexChange={setLatex} ariaLabel="Expresión" placeholder="0" fieldRef={setMathField} />
-      {validationError && (
-        <p role="alert" className="px-2 text-sm text-red-600">
-          {validationError}
-        </p>
-      )}
+      <div className="flex flex-col gap-3 lg:col-start-1">
+        <NaturalMathField latex={latex} onLatexChange={setLatex} ariaLabel="Expresión" placeholder="0" fieldRef={setMathField} />
+        {validationError && (
+          <p role="alert" className="px-2 text-sm text-red-600">
+            {validationError}
+          </p>
+        )}
+        <SimpleKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
+      </div>
 
       {(isLoading || lastResult) && (
-        <div className="rounded-lg bg-paper-soft p-4">
+        <div className="rounded-lg bg-paper-soft p-4 lg:col-start-2">
           <ResultPanel result={lastResult} isLoading={isLoading} />
         </div>
       )}
-
-      <SimpleKeyboard field={mathField} onSubmit={() => formRef.current?.requestSubmit()} />
     </form>
   );
 }
